@@ -1,20 +1,32 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import axiosClient from "../api/axiosClient";
 
 function OrderSuccessPage() {
   const navigate = useNavigate();
   const { orderId } = useParams();
 
-  const [order, setOrder] = useState(null);
-  const [payment, setPayment] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [order, setOrder] =
+    useState(null);
 
+  const [payment, setPayment] =
+    useState(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  // ================================
+  // LOAD ORDER + PAYMENT
+  // ================================
   useEffect(() => {
     const loadOrder = async () => {
       try {
-        // Lay thong tin Order
         const orderResponse =
           await axiosClient.get(
             `/api/orders/${orderId}`
@@ -22,16 +34,17 @@ function OrderSuccessPage() {
 
         setOrder(orderResponse.data);
 
-        // Lay thong tin Payment
         const paymentResponse =
           await axiosClient.get(
             `/api/payments/order/${orderId}`
           );
 
-        setPayment(paymentResponse.data);
+        setPayment(
+          paymentResponse.data
+        );
 
         console.log(
-          "ORDER THANH CONG:",
+          "ORDER:",
           orderResponse.data
         );
 
@@ -39,7 +52,6 @@ function OrderSuccessPage() {
           "PAYMENT:",
           paymentResponse.data
         );
-
       } catch (err) {
         console.error(
           "LOAD ORDER THAT BAI:",
@@ -48,9 +60,8 @@ function OrderSuccessPage() {
 
         setError(
           err.response?.data?.message ||
-          "Khong the tai thong tin don hang"
+          "Không thể tải thông tin đơn hàng"
         );
-
       } finally {
         setLoading(false);
       }
@@ -59,9 +70,91 @@ function OrderSuccessPage() {
     loadOrder();
   }, [orderId]);
 
+  // ================================
+  // FORMAT PRICE
+  // ================================
+  const formatPrice = (price) => {
+    return (
+      Number(price || 0).toLocaleString(
+        "vi-VN"
+      ) + " đ"
+    );
+  };
+
+  // ================================
+  // ORDER STATUS
+  // ================================
+  const getOrderStatusLabel = (
+    status
+  ) => {
+    switch (status) {
+      case "PENDING":
+        return "Chờ xác nhận";
+
+      case "CONFIRMED":
+        return "Đã xác nhận";
+
+      case "SHIPPING":
+        return "Đang giao hàng";
+
+      case "COMPLETED":
+        return "Đã hoàn thành";
+
+      case "CANCELLED":
+        return "Đã hủy";
+
+      default:
+        return status || "Chưa xác định";
+    }
+  };
+
+  // ================================
+  // PAYMENT METHOD
+  // ================================
+  const getPaymentMethodLabel = (
+    method
+  ) => {
+    switch (method) {
+      case "COD":
+        return "Thanh toán khi nhận hàng (COD)";
+
+      case "BANK_TRANSFER":
+        return "Chuyển khoản ngân hàng";
+
+      default:
+        return method || "Chưa xác định";
+    }
+  };
+
+  // ================================
+  // PAYMENT STATUS
+  // ================================
+  const getPaymentStatusLabel = (
+    status
+  ) => {
+    switch (status) {
+      case "PENDING":
+        return "Chờ thanh toán";
+
+      case "PAID":
+        return "Đã thanh toán";
+
+      case "FAILED":
+        return "Thanh toán thất bại";
+
+      case "CANCELLED":
+        return "Đã hủy";
+
+      default:
+        return status || "Chưa xác định";
+    }
+  };
+
   if (loading) {
     return (
-      <p>Dang tai thong tin don hang...</p>
+      <p>
+        Đang tải thông tin đơn hàng...
+      </p>
     );
   }
 
@@ -71,11 +164,12 @@ function OrderSuccessPage() {
         <h2>{error}</h2>
 
         <button
+          type="button"
           onClick={() =>
-            navigate("/customer")
+            navigate("/")
           }
         >
-          Ve trang Customer
+          Về trang chủ
         </button>
       </div>
     );
@@ -83,117 +177,153 @@ function OrderSuccessPage() {
 
   return (
     <div>
-      <h1>Dat hang thanh cong</h1>
+      <h1>Đặt hàng thành công</h1>
 
       <p>
-        Ma don hang: #{order?.id}
+        Mã đơn hàng:{" "}
+        <strong>
+          #{order?.id}
+        </strong>
       </p>
 
       <p>
-        Trang thai: {order?.status}
+        Trạng thái:{" "}
+        <strong>
+          {getOrderStatusLabel(
+            order?.status
+          )}
+        </strong>
       </p>
 
       <hr />
 
-      <h2>Thong tin giao hang</h2>
+      {/* SHIPPING */}
+      <h2>Thông tin giao hàng</h2>
 
       <p>
-        Nguoi nhan:{" "}
-        {order?.recipientName}
+        Người nhận:{" "}
+        <strong>
+          {order?.recipientName}
+        </strong>
       </p>
 
       <p>
-        So dien thoai:{" "}
+        Số điện thoại:{" "}
         {order?.phone}
       </p>
 
       <p>
-        Dia chi:{" "}
+        Địa chỉ:{" "}
         {order?.shippingAddress}
       </p>
 
       <hr />
 
-      <h2>San pham</h2>
+      {/* PRODUCTS */}
+      <h2>Sản phẩm</h2>
 
-      {order?.items?.map((item) => (
-        <div key={item.id}>
-          <h3>
-            {item.productName}
-          </h3>
+      {order?.items?.map(
+        (item) => (
+          <div key={item.id}>
+            <h3>
+              {item.productName}
+            </h3>
 
-          <p>
-            Gia:{" "}
-            {Number(
-              item.unitPrice
-            ).toLocaleString("vi-VN")}{" "}
-            VND
-          </p>
+            {/* SIZE */}
+            {item.size && (
+              <p>
+                Size:{" "}
+                <strong>
+                  {item.size}
+                </strong>
+              </p>
+            )}
 
-          <p>
-            So luong: {item.quantity}
-          </p>
+            <p>
+              Giá:{" "}
+              {formatPrice(
+                item.unitPrice
+              )}
+            </p>
 
-          <p>
-            Thanh tien:{" "}
-            {Number(
-              item.subtotal
-            ).toLocaleString("vi-VN")}{" "}
-            VND
-          </p>
+            <p>
+              Số lượng:{" "}
+              {item.quantity}
+            </p>
 
-          <hr />
-        </div>
-      ))}
+            <p>
+              Thành tiền:{" "}
+              <strong>
+                {formatPrice(
+                  item.subtotal
+                )}
+              </strong>
+            </p>
+
+            <hr />
+          </div>
+        )
+      )}
 
       <h2>
-        Tong tien:{" "}
-        {Number(
-          order?.totalAmount || 0
-        ).toLocaleString("vi-VN")}{" "}
-        VND
+        Tổng tiền:{" "}
+        {formatPrice(
+          order?.totalAmount
+        )}
       </h2>
 
       <hr />
 
-      <h2>Thanh toan</h2>
+      {/* PAYMENT */}
+      <h2>Thanh toán</h2>
 
       <p>
-        Phuong thuc:{" "}
-        {payment?.paymentMethod}
+        Phương thức:{" "}
+        <strong>
+          {getPaymentMethodLabel(
+            payment?.paymentMethod
+          )}
+        </strong>
       </p>
 
       <p>
-        Trang thai thanh toan:{" "}
-        {payment?.status}
+        Trạng thái thanh toán:{" "}
+        <strong>
+          {getPaymentStatusLabel(
+            payment?.status
+          )}
+        </strong>
       </p>
 
       <p>
-        So tien:{" "}
-        {Number(
-          payment?.amount || 0
-        ).toLocaleString("vi-VN")}{" "}
-        VND
+        Số tiền:{" "}
+        <strong>
+          {formatPrice(
+            payment?.amount
+          )}
+        </strong>
       </p>
 
       <br />
 
       <button
+        type="button"
         onClick={() =>
-          navigate("/customer")
+          navigate("/")
         }
       >
-        Tiep tuc mua hang
+        Tiếp tục mua hàng
       </button>
 
       {" "}
 
       <button
+        type="button"
         onClick={() =>
           navigate("/orders")
         }
       >
-        Xem don hang cua toi
+        Xem đơn hàng của tôi
       </button>
     </div>
   );

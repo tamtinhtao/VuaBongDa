@@ -41,6 +41,12 @@ public class OrderItem {
     private String productName;
 
     @Column(
+            name = "size",
+            length = 20
+    )
+    private String size;
+
+    @Column(
             name = "unit_price",
             nullable = false,
             precision = 15,

@@ -1,137 +1,532 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axiosClient from '../api/axiosClient';
+import { useEffect, useState } from "react";
+import {
+  Link,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+import axiosClient from "../api/axiosClient";
 
-const ProductDetailPage = () => {
+const SHOE_SIZES = [
+  "38",
+  "39",
+  "40",
+  "41",
+  "42",
+  "43",
+];
+
+const CLOTHING_SIZES = [
+  "S",
+  "M",
+  "L",
+  "XL",
+];
+
+function normalizeText(text = "") {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [product, setProduct] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [loading, setLoading] = useState(true);
 
+  const [product, setProduct] =
+    useState(null);
+
+  const [quantity, setQuantity] =
+    useState(1);
+
+  const [
+    selectedSize,
+    setSelectedSize,
+  ] = useState("");
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [
+    processing,
+    setProcessing,
+  ] = useState(false);
+
+  const token =
+    localStorage.getItem("vb_token");
+
+  const role =
+    localStorage.getItem("vb_role");
+
+  // ================================
+  // LOAD PRODUCT
+  // ================================
   useEffect(() => {
-    const fetchDetail = async () => {
+    const loadProduct = async () => {
       try {
-        const res = await axiosClient.get(`/api/products/${id}`);
-        setProduct(res.data);
-      } catch (err) {
-        alert('Không tìm thấy sản phẩm!');
-        navigate('/products');
+        setLoading(true);
+
+        const response =
+          await axiosClient.get(
+            `/api/products/${id}`
+          );
+
+        setProduct(response.data);
+
+        setQuantity(1);
+        setSelectedSize("");
+      } catch (error) {
+        console.error(
+          "LOAD PRODUCT THAT BAI:",
+          error
+        );
+
+        alert(
+          "Không tìm thấy sản phẩm."
+        );
+
+        navigate("/products");
       } finally {
         setLoading(false);
       }
     };
-    fetchDetail();
+
+    loadProduct();
   }, [id, navigate]);
 
+  // ================================
+  // IMAGE
+  // ================================
   const getImageUrl = (url) => {
-    if (!url) return 'https://via.placeholder.com/500x400?text=No+Image';
-    if (url.startsWith('http')) return url;
-    return `${import.meta.env.VITE_API_URL}${url}`;
+    if (!url) return null;
+
+    if (url.startsWith("http")) {
+      return url;
+    }
+
+    return `${import.meta.env.VITE_API_URL
+      }${url}`;
   };
 
+  // ================================
+  // PRICE
+  // ================================
+  const formatPrice = (price) =>
+    Number(price || 0).toLocaleString(
+      "vi-VN"
+    ) + " đ";
+
+  // ================================
+  // CATEGORY
+  // ================================
+  const categoryText =
+    normalizeText(
+      product?.categoryName || ""
+    );
+
+  const isShoes =
+    categoryText.includes("giay");
+
+  const isClothing =
+    categoryText.includes("ao") ||
+    categoryText.includes("quan");
+
+  const needSize =
+    isShoes || isClothing;
+
+  const sizes = isShoes
+    ? SHOE_SIZES
+    : isClothing
+      ? CLOTHING_SIZES
+      : [];
+
+  // ================================
+  // QUANTITY
+  // ================================
   const handleDecrease = () => {
-    if (quantity > 1) setQuantity(quantity - 1);
+    if (quantity > 1) {
+      setQuantity(
+        (current) => current - 1
+      );
+    }
   };
 
   const handleIncrease = () => {
-    const stock = product.stockQuantity ?? product.stock ?? 0;
+    const stock =
+      product?.stockQuantity ?? 0;
+
     if (quantity < stock) {
-      setQuantity(quantity + 1);
-    } else {
-      alert(`Chỉ còn ${stock} sản phẩm trong kho`);
+      setQuantity(
+        (current) => current + 1
+      );
     }
   };
 
-  const handleAddToCart = async () => {
-    const token = localStorage.getItem('vb_token');
+  // ================================
+  // VALIDATE
+  // ================================
+  const validatePurchase = () => {
     if (!token) {
-      navigate('/login');
+      navigate("/login");
+      return false;
+    }
+
+    if (role !== "CUSTOMER") {
+      alert(
+        "Chỉ tài khoản khách hàng mới có thể mua sản phẩm."
+      );
+
+      return false;
+    }
+
+    if (needSize && !selectedSize) {
+      alert(
+        "Vui lòng chọn size."
+      );
+
+      return false;
+    }
+
+    if (
+      !product ||
+      product.stockQuantity <= 0
+    ) {
+      alert(
+        "Sản phẩm hiện đã hết hàng."
+      );
+
+      return false;
+    }
+
+    return true;
+  };
+
+  // ================================
+  // THEM VAO GIO
+  // ================================
+  const handleAddToCart =
+    async () => {
+      if (!validatePurchase()) {
+        return;
+      }
+
+      try {
+        setProcessing(true);
+
+        await axiosClient.post(
+          "/api/cart/items",
+          {
+            productId: product.id,
+            quantity,
+            size: needSize
+              ? selectedSize
+              : null,
+          }
+        );
+
+        // Navbar sau nay se nghe event nay
+        window.dispatchEvent(
+          new Event("cart-updated")
+        );
+
+        alert(
+          needSize
+            ? `Đã thêm ${product.name} - Size ${selectedSize} vào giỏ hàng.`
+            : `Đã thêm ${product.name} vào giỏ hàng.`
+        );
+      } catch (error) {
+        console.error(
+          "ADD TO CART THAT BAI:",
+          error
+        );
+
+        alert(
+          error.response?.data
+            ?.message ||
+          "Không thể thêm sản phẩm vào giỏ hàng."
+        );
+      } finally {
+        setProcessing(false);
+      }
+    };
+
+  // ================================
+  // MUA NGAY
+  // KHONG THEM VAO CART
+  // ================================
+  const handleBuyNow = () => {
+    if (!validatePurchase()) {
       return;
     }
 
-    try {
-      await axiosClient.post('/api/cart/items', {
-        productId: product.id,
-        quantity,
-      });
-      alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
-    } catch (err) {
-      alert(err.response?.data?.message || 'Có lỗi xảy ra khi thêm vào giỏ hàng');
-    }
+    const buyNowData = {
+      productId: product.id,
+      quantity,
+      size: needSize
+        ? selectedSize
+        : null,
+    };
+
+    sessionStorage.setItem(
+      "vb_buy_now",
+      JSON.stringify(
+        buyNowData
+      )
+    );
+
+    // Xoa selection cart cu
+    // de tranh nham luong checkout
+    sessionStorage.removeItem(
+      "vb_checkout_cart_items"
+    );
+
+    navigate(
+      "/checkout?mode=buy-now"
+    );
   };
 
-  if (loading) return <div className="text-center py-5">Đang tải chi tiết sản phẩm...</div>;
-  if (!product) return null;
+  // ================================
+  // LOADING
+  // ================================
+  if (loading) {
+    return (
+      <div className="product-detail-message">
+        Đang tải sản phẩm...
+      </div>
+    );
+  }
 
-  const stock = product.stockQuantity ?? product.stock ?? 0;
+  if (!product) {
+    return null;
+  }
+
+  const stock =
+    product.stockQuantity ?? 0;
 
   return (
-    <div className="container pb-5">
-      <div className="row g-4 bg-white p-4 rounded shadow-sm">
-        <div className="col-md-6 text-center">
-          <img
-            src={getImageUrl(product.imageUrl)}
-            alt={product.name}
-            className="img-fluid rounded object-fit-cover"
-            style={{ maxHeight: '450px', width: '100%' }}
-          />
+    <main className="product-detail-page">
+      <div className="product-detail-container">
+
+        {/* BREADCRUMB */}
+        <div className="product-breadcrumb">
+          <Link to="/">
+            Trang chủ
+          </Link>
+
+          <span>/</span>
+
+          <Link to="/products">
+            Sản phẩm
+          </Link>
+
+          <span>/</span>
+
+          <span>
+            {product.name}
+          </span>
         </div>
 
-        <div className="col-md-6 d-flex flex-column">
-          <h2 className="fw-bold">{product.name}</h2>
-          <div className="text-muted mb-2">
-            Thương hiệu: <strong>{product.brandName || product.brand || 'N/A'}</strong> | Danh mục:{' '}
-            <strong>{product.categoryName || product.category?.name || 'N/A'}</strong>
-          </div>
+        <section className="product-detail-main">
 
-          <h3 className="text-success fw-bold my-3">
-            {product.price?.toLocaleString('vi-VN')} đ
-          </h3>
-
-          <p className="text-secondary">{product.description || 'Chưa có mô tả chi tiết.'}</p>
-
-          <div className="mb-3">
-            Tồn kho: <span className="badge bg-secondary fs-6">{stock}</span>
-          </div>
-
-          <div className="d-flex align-items-center gap-3 my-4">
-            <label className="fw-semibold">Số lượng:</label>
-            <div className="input-group" style={{ width: '130px' }}>
-              <button
-                className="btn btn-outline-secondary"
-                onClick={handleDecrease}
-                disabled={quantity <= 1}
-              >
-                -
-              </button>
-              <input
-                type="text"
-                className="form-control text-center"
-                value={quantity}
-                readOnly
+          {/* IMAGE */}
+          <div className="product-detail-image">
+            {getImageUrl(
+              product.imageUrl
+            ) ? (
+              <img
+                src={getImageUrl(
+                  product.imageUrl
+                )}
+                alt={product.name}
               />
-              <button
-                className="btn btn-outline-secondary"
-                onClick={handleIncrease}
-                disabled={quantity >= stock}
-              >
-                +
-              </button>
-            </div>
+            ) : (
+              <div className="product-no-image">
+                Chưa có ảnh sản phẩm
+              </div>
+            )}
           </div>
 
-          <button
-            className="btn btn-success btn-lg mt-auto"
-            onClick={handleAddToCart}
-            disabled={stock <= 0}
-          >
-            {stock > 0 ? 'Thêm vào giỏ hàng' : 'Hết hàng'}
-          </button>
-        </div>
+          {/* INFO */}
+          <div className="product-detail-info">
+
+            <p className="detail-category">
+              {product.categoryName ||
+                "Sản phẩm"}
+            </p>
+
+            <h1>
+              {product.name}
+            </h1>
+
+            <div className="detail-brand">
+              Thương hiệu:
+              <strong>
+                {product.brand ||
+                  "Chưa cập nhật"}
+              </strong>
+            </div>
+
+            <div className="detail-price">
+              {formatPrice(
+                product.price
+              )}
+            </div>
+
+            {/* STOCK */}
+            <div className="detail-stock">
+              {stock > 0 ? (
+                <>
+                  <span className="stock-available">
+                    Còn hàng
+                  </span>
+
+                  <span>
+                    {stock} sản phẩm
+                    trong kho
+                  </span>
+                </>
+              ) : (
+                <span className="stock-empty">
+                  Hết hàng
+                </span>
+              )}
+            </div>
+
+            {/* DESCRIPTION */}
+            <p className="detail-description">
+              {product.description ||
+                "Sản phẩm hiện chưa có mô tả."}
+            </p>
+
+            {/* SIZE */}
+            {needSize && (
+              <div className="detail-size">
+                <div className="detail-option-title">
+                  <strong>
+                    Chọn size
+                  </strong>
+
+                  {selectedSize && (
+                    <span>
+                      Đã chọn:{" "}
+                      {selectedSize}
+                    </span>
+                  )}
+                </div>
+
+                <div className="size-options">
+                  {sizes.map(
+                    (size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        className={
+                          selectedSize ===
+                            size
+                            ? "size-button active"
+                            : "size-button"
+                        }
+                        onClick={() =>
+                          setSelectedSize(
+                            size
+                          )
+                        }
+                      >
+                        {size}
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* CUSTOMER */}
+            {role !== "ADMIN" && (
+              <>
+                {/* QUANTITY */}
+                <div className="detail-quantity">
+                  <span>
+                    Số lượng
+                  </span>
+
+                  <div className="quantity-control">
+                    <button
+                      type="button"
+                      onClick={
+                        handleDecrease
+                      }
+                      disabled={
+                        quantity <= 1
+                      }
+                    >
+                      −
+                    </button>
+
+                    <span>
+                      {quantity}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={
+                        handleIncrease
+                      }
+                      disabled={
+                        quantity >= stock
+                      }
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* ACTIONS */}
+                <div className="detail-actions">
+                  <button
+                    type="button"
+                    className="detail-add-cart"
+                    onClick={
+                      handleAddToCart
+                    }
+                    disabled={
+                      stock <= 0 ||
+                      processing
+                    }
+                  >
+                    {processing
+                      ? "Đang xử lý..."
+                      : "Thêm vào giỏ hàng"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="detail-buy-now"
+                    onClick={
+                      handleBuyNow
+                    }
+                    disabled={
+                      stock <= 0 ||
+                      processing
+                    }
+                  >
+                    Mua ngay
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* ADMIN */}
+            {role === "ADMIN" && (
+              <div className="admin-view-note">
+                Bạn đang xem sản phẩm
+                bằng tài khoản quản trị.
+              </div>
+            )}
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
-};
+}
 
 export default ProductDetailPage;

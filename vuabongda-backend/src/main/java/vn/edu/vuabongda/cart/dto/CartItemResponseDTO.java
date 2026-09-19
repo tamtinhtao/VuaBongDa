@@ -19,6 +19,8 @@ public class CartItemResponseDTO {
 
     private String imageUrl;
 
+    private String size;
+
     private BigDecimal price;
 
     private Integer quantity;

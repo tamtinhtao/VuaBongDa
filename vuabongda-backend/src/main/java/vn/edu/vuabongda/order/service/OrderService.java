@@ -10,21 +10,24 @@ import vn.edu.vuabongda.cart.repository.CartRepository;
 import vn.edu.vuabongda.order.dto.CreateOrderRequestDTO;
 import vn.edu.vuabongda.order.dto.OrderItemResponseDTO;
 import vn.edu.vuabongda.order.dto.OrderResponseDTO;
+import vn.edu.vuabongda.order.dto.UpdateOrderStatusRequestDTO;
 import vn.edu.vuabongda.order.entity.Order;
 import vn.edu.vuabongda.order.entity.OrderItem;
 import vn.edu.vuabongda.order.repository.OrderItemRepository;
 import vn.edu.vuabongda.order.repository.OrderRepository;
+import vn.edu.vuabongda.payment.service.PaymentService;
 import vn.edu.vuabongda.product.entity.Product;
 import vn.edu.vuabongda.product.repository.ProductRepository;
 import vn.edu.vuabongda.user.entity.User;
 import vn.edu.vuabongda.user.repository.UserRepository;
 
 import java.math.BigDecimal;
+import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
-import vn.edu.vuabongda.payment.service.PaymentService;
-import vn.edu.vuabongda.order.dto.UpdateOrderStatusRequestDTO;
 
 @Service
 @RequiredArgsConstructor
@@ -32,21 +35,15 @@ import vn.edu.vuabongda.order.dto.UpdateOrderStatusRequestDTO;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-
     private final OrderItemRepository orderItemRepository;
-
     private final UserRepository userRepository;
-
     private final CartRepository cartRepository;
-
     private final CartItemRepository cartItemRepository;
-
     private final ProductRepository productRepository;
-
     private final PaymentService paymentService;
 
     // ================================
-    // DAT HANG TU CART
+    // TAO DON HANG
     // ================================
     public OrderResponseDTO createOrder(
             String username,
@@ -61,6 +58,34 @@ public class OrderService {
                         )
                 );
 
+        String mode = request.getMode();
+
+        if (mode == null || mode.isBlank()) {
+            mode = "CART";
+        }
+
+        if ("BUY_NOW".equalsIgnoreCase(mode)) {
+            return createBuyNowOrder(
+                    user,
+                    request
+            );
+        }
+
+        return createCartOrder(
+                user,
+                request
+        );
+    }
+
+    // ================================
+    // DAT HANG TU CAC ITEM DUOC CHON
+    // TRONG CART
+    // ================================
+    private OrderResponseDTO createCartOrder(
+            User user,
+            CreateOrderRequestDTO request
+    ) {
+
         Cart cart = cartRepository
                 .findByUserId(user.getId())
                 .orElseThrow(
@@ -69,40 +94,83 @@ public class OrderService {
                         )
                 );
 
-        List<CartItem> cartItems =
-                cartItemRepository.findByCartId(
-                        cart.getId()
-                );
+        // Bat buoc phai chon item
+        if (request.getCartItemIds() == null
+                || request.getCartItemIds().isEmpty()) {
 
-        if (cartItems.isEmpty()) {
             throw new IllegalArgumentException(
-                    "Gio hang dang trong"
+                    "Vui long chon san pham can thanh toan"
             );
         }
 
-        // ================================
-        // KIEM TRA TON KHO + TINH TONG
-        // ================================
-        BigDecimal totalAmount =
-                BigDecimal.ZERO;
+        // Loai bo ID trung
+        List<Long> selectedIds =
+                request.getCartItemIds()
+                        .stream()
+                        .distinct()
+                        .toList();
 
-        for (CartItem cartItem : cartItems) {
+        List<CartItem> selectedItems =
+                cartItemRepository.findAllById(
+                        selectedIds
+                );
 
-            Product product =
-                    cartItem.getProduct();
+        // Kiem tra ID co ton tai day du khong
+        if (selectedItems.size()
+                != selectedIds.size()) {
 
-            if (!"ACTIVE".equalsIgnoreCase(
-                    product.getStatus()
-            )) {
+            throw new IllegalArgumentException(
+                    "Co san pham trong gio hang khong ton tai"
+            );
+        }
+
+        // Kiem tra tat ca item co thuoc cart
+        // cua user hien tai khong
+        for (CartItem item : selectedItems) {
+
+            if (!item.getCart()
+                    .getId()
+                    .equals(cart.getId())) {
 
                 throw new IllegalArgumentException(
-                        "San pham "
-                                + product.getName()
-                                + " hien khong hoat dong"
+                        "San pham khong thuoc gio hang cua ban"
                 );
             }
+        }
 
-            if (cartItem.getQuantity()
+        // ================================
+        // KIEM TRA PRODUCT + TON KHO
+        // ================================
+        Map<Long, Integer> quantityByProduct =
+                new HashMap<>();
+
+        for (CartItem item : selectedItems) {
+
+            Product product =
+                    item.getProduct();
+
+            validateProduct(product);
+
+            quantityByProduct.merge(
+                    product.getId(),
+                    item.getQuantity(),
+                    Integer::sum
+            );
+        }
+
+        for (Map.Entry<Long, Integer> entry
+                : quantityByProduct.entrySet()) {
+
+            Product product =
+                    productRepository
+                            .findById(entry.getKey())
+                            .orElseThrow(
+                                    () -> new NoSuchElementException(
+                                            "Khong tim thay san pham"
+                                    )
+                            );
+
+            if (entry.getValue()
                     > product.getStockQuantity()) {
 
                 throw new IllegalArgumentException(
@@ -111,52 +179,49 @@ public class OrderService {
                                 + " khong du ton kho"
                 );
             }
+        }
+
+        // ================================
+        // TINH TONG TIEN
+        // ================================
+        BigDecimal totalAmount =
+                BigDecimal.ZERO;
+
+        for (CartItem item : selectedItems) {
 
             BigDecimal subtotal =
-                    product.getPrice()
+                    item.getProduct()
+                            .getPrice()
                             .multiply(
                                     BigDecimal.valueOf(
-                                            cartItem.getQuantity()
+                                            item.getQuantity()
                                     )
                             );
 
             totalAmount =
-                    totalAmount.add(subtotal);
+                    totalAmount.add(
+                            subtotal
+                    );
         }
 
         // ================================
         // TAO ORDER
         // ================================
-        Order order = new Order();
-
-        order.setUser(user);
-
-        order.setRecipientName(
-                request.getRecipientName()
-        );
-
-        order.setPhone(
-                request.getPhone()
-        );
-
-        order.setShippingAddress(
-                request.getShippingAddress()
-        );
-
-        order.setTotalAmount(totalAmount);
-
-        order.setStatus("PENDING");
-
         Order savedOrder =
-                orderRepository.save(order);
+                createBaseOrder(
+                        user,
+                        request,
+                        totalAmount
+                );
 
         // ================================
-        // TAO ORDER ITEMS + TRU TON KHO
+        // TAO ORDER ITEM
         // ================================
         List<OrderItem> orderItems =
                 new ArrayList<>();
 
-        for (CartItem cartItem : cartItems) {
+        for (CartItem cartItem
+                : selectedItems) {
 
             Product product =
                     cartItem.getProduct();
@@ -174,12 +239,20 @@ public class OrderService {
             OrderItem orderItem =
                     new OrderItem();
 
-            orderItem.setOrder(savedOrder);
+            orderItem.setOrder(
+                    savedOrder
+            );
 
-            orderItem.setProduct(product);
+            orderItem.setProduct(
+                    product
+            );
 
             orderItem.setProductName(
                     product.getName()
+            );
+
+            orderItem.setSize(
+                    cartItem.getSize()
             );
 
             orderItem.setUnitPrice(
@@ -194,33 +267,40 @@ public class OrderService {
                     subtotal
             );
 
-            orderItems.add(orderItem);
+            orderItems.add(
+                    orderItem
+            );
 
+            // ================================
             // TRU TON KHO
+            // ================================
             product.setStockQuantity(
                     product.getStockQuantity()
                             - cartItem.getQuantity()
             );
 
-            productRepository.save(product);
+            productRepository.save(
+                    product
+            );
         }
 
         orderItemRepository.saveAll(
                 orderItems
         );
+
         // ================================
-// TAO PAYMENT CHO ORDER
-// ================================
+        // TAO PAYMENT
+        // ================================
         paymentService.createPayment(
                 savedOrder,
                 request.getPaymentMethod()
         );
 
         // ================================
-        // XOA CART ITEMS SAU KHI DAT HANG
+        // CHI XOA ITEM DA THANH TOAN
         // ================================
-        cartItemRepository.deleteAllByCartId(
-                cart.getId()
+        cartItemRepository.deleteAll(
+                selectedItems
         );
 
         return toDTO(
@@ -230,20 +310,374 @@ public class OrderService {
     }
 
     // ================================
-    // LAY DANH SACH DON CUA USER
+    // MUA NGAY
+    // KHONG DUNG CART
+    // ================================
+    private OrderResponseDTO createBuyNowOrder(
+            User user,
+            CreateOrderRequestDTO request
+    ) {
+
+        if (request.getProductId() == null) {
+
+            throw new IllegalArgumentException(
+                    "Product ID khong duoc de trong"
+            );
+        }
+
+        if (request.getQuantity() == null
+                || request.getQuantity() < 1) {
+
+            throw new IllegalArgumentException(
+                    "So luong phai lon hon 0"
+            );
+        }
+
+        Product product =
+                productRepository
+                        .findById(
+                                request.getProductId()
+                        )
+                        .orElseThrow(
+                                () -> new NoSuchElementException(
+                                        "Khong tim thay san pham"
+                                )
+                        );
+
+        validateProduct(product);
+
+        String size =
+                normalizeSize(
+                        request.getSize()
+                );
+
+        validateSize(
+                product,
+                size
+        );
+
+        if (request.getQuantity()
+                > product.getStockQuantity()) {
+
+            throw new IllegalArgumentException(
+                    "So luong vuot qua ton kho"
+            );
+        }
+
+        BigDecimal unitPrice =
+                product.getPrice();
+
+        BigDecimal subtotal =
+                unitPrice.multiply(
+                        BigDecimal.valueOf(
+                                request.getQuantity()
+                        )
+                );
+
+        // ================================
+        // TAO ORDER
+        // ================================
+        Order savedOrder =
+                createBaseOrder(
+                        user,
+                        request,
+                        subtotal
+                );
+
+        // ================================
+        // TAO ORDER ITEM
+        // ================================
+        OrderItem orderItem =
+                new OrderItem();
+
+        orderItem.setOrder(
+                savedOrder
+        );
+
+        orderItem.setProduct(
+                product
+        );
+
+        orderItem.setProductName(
+                product.getName()
+        );
+
+        orderItem.setSize(
+                size
+        );
+
+        orderItem.setUnitPrice(
+                unitPrice
+        );
+
+        orderItem.setQuantity(
+                request.getQuantity()
+        );
+
+        orderItem.setSubtotal(
+                subtotal
+        );
+
+        orderItemRepository.save(
+                orderItem
+        );
+
+        // ================================
+        // TRU TON KHO
+        // ================================
+        product.setStockQuantity(
+                product.getStockQuantity()
+                        - request.getQuantity()
+        );
+
+        productRepository.save(
+                product
+        );
+
+        // ================================
+        // TAO PAYMENT
+        // ================================
+        paymentService.createPayment(
+                savedOrder,
+                request.getPaymentMethod()
+        );
+
+        // BUY_NOW:
+        // KHONG XOA HOAC SUA CART
+
+        return toDTO(
+                savedOrder,
+                List.of(orderItem)
+        );
+    }
+
+    // ================================
+    // TAO ORDER CHUNG
+    // ================================
+    private Order createBaseOrder(
+            User user,
+            CreateOrderRequestDTO request,
+            BigDecimal totalAmount
+    ) {
+
+        Order order =
+                new Order();
+
+        order.setUser(
+                user
+        );
+
+        order.setRecipientName(
+                request.getRecipientName()
+        );
+
+        order.setPhone(
+                request.getPhone()
+        );
+
+        order.setShippingAddress(
+                request.getShippingAddress()
+        );
+
+        order.setTotalAmount(
+                totalAmount
+        );
+
+        order.setStatus(
+                "PENDING"
+        );
+
+        return orderRepository.save(
+                order
+        );
+    }
+
+    // ================================
+    // VALIDATE PRODUCT
+    // ================================
+    private void validateProduct(
+            Product product
+    ) {
+
+        if (!"ACTIVE".equalsIgnoreCase(
+                product.getStatus()
+        )) {
+
+            throw new IllegalArgumentException(
+                    "San pham "
+                            + product.getName()
+                            + " hien khong hoat dong"
+            );
+        }
+
+        if (product.getStockQuantity() == null
+                || product.getStockQuantity() <= 0) {
+
+            throw new IllegalArgumentException(
+                    "San pham "
+                            + product.getName()
+                            + " da het hang"
+            );
+        }
+    }
+
+    // ================================
+    // NORMALIZE SIZE
+    // ================================
+    private String normalizeSize(
+            String size
+    ) {
+
+        if (size == null
+                || size.isBlank()) {
+
+            return null;
+        }
+
+        return size
+                .trim()
+                .toUpperCase();
+    }
+
+    // ================================
+    // NORMALIZE TEXT
+    // ================================
+    private String normalizeText(
+            String text
+    ) {
+
+        if (text == null) {
+            return "";
+        }
+
+        String normalized =
+                Normalizer.normalize(
+                        text,
+                        Normalizer.Form.NFD
+                );
+
+        return normalized
+                .replaceAll(
+                        "\\p{M}",
+                        ""
+                )
+                .toLowerCase();
+    }
+
+    // ================================
+    // VALIDATE SIZE
+    // ================================
+    private void validateSize(
+            Product product,
+            String size
+    ) {
+
+        String categoryName = "";
+
+        if (product.getCategory()
+                != null) {
+
+            categoryName =
+                    product.getCategory()
+                            .getName();
+        }
+
+        String category =
+                normalizeText(
+                        categoryName
+                );
+
+        boolean isShoes =
+                category.contains(
+                        "giay"
+                );
+
+        boolean isClothing =
+                category.contains("ao")
+                        || category.contains(
+                        "quan"
+                );
+
+        if ((isShoes || isClothing)
+                && size == null) {
+
+            throw new IllegalArgumentException(
+                    "Vui long chon size"
+            );
+        }
+
+        if (!isShoes
+                && !isClothing
+                && size != null) {
+
+            throw new IllegalArgumentException(
+                    "San pham nay khong can chon size"
+            );
+        }
+
+        if (isShoes
+                && size != null) {
+
+            List<String> validSizes =
+                    List.of(
+                            "38",
+                            "39",
+                            "40",
+                            "41",
+                            "42",
+                            "43"
+                    );
+
+            if (!validSizes.contains(
+                    size
+            )) {
+
+                throw new IllegalArgumentException(
+                        "Size giay khong hop le"
+                );
+            }
+        }
+
+        if (isClothing
+                && size != null) {
+
+            List<String> validSizes =
+                    List.of(
+                            "S",
+                            "M",
+                            "L",
+                            "XL"
+                    );
+
+            if (!validSizes.contains(
+                    size
+            )) {
+
+                throw new IllegalArgumentException(
+                        "Size quan ao khong hop le"
+                );
+            }
+        }
+    }
+
+    // ================================
+    // DON HANG CUA USER
     // ================================
     @Transactional(readOnly = true)
     public List<OrderResponseDTO> getMyOrders(
             String username
     ) {
 
-        User user = userRepository
-                .findByUsername(username)
-                .orElseThrow(
-                        () -> new NoSuchElementException(
-                                "Khong tim thay nguoi dung"
+        User user =
+                userRepository
+                        .findByUsername(
+                                username
                         )
-                );
+                        .orElseThrow(
+                                () -> new NoSuchElementException(
+                                        "Khong tim thay nguoi dung"
+                                )
+                        );
 
         return orderRepository
                 .findByUserIdOrderByCreatedAtDesc(
@@ -255,7 +689,7 @@ public class OrderService {
     }
 
     // ================================
-    // XEM CHI TIET 1 DON
+    // CHI TIET DON CUA USER
     // ================================
     @Transactional(readOnly = true)
     public OrderResponseDTO getMyOrderById(
@@ -263,41 +697,49 @@ public class OrderService {
             Long orderId
     ) {
 
-        User user = userRepository
-                .findByUsername(username)
-                .orElseThrow(
-                        () -> new NoSuchElementException(
-                                "Khong tim thay nguoi dung"
+        User user =
+                userRepository
+                        .findByUsername(
+                                username
                         )
-                );
+                        .orElseThrow(
+                                () -> new NoSuchElementException(
+                                        "Khong tim thay nguoi dung"
+                                )
+                        );
 
-        Order order = orderRepository
-                .findByIdAndUserId(
-                        orderId,
-                        user.getId()
-                )
-                .orElseThrow(
-                        () -> new NoSuchElementException(
-                                "Khong tim thay don hang"
+        Order order =
+                orderRepository
+                        .findByIdAndUserId(
+                                orderId,
+                                user.getId()
                         )
-                );
+                        .orElseThrow(
+                                () -> new NoSuchElementException(
+                                        "Khong tim thay don hang"
+                                )
+                        );
 
         return toDTO(order);
     }
 
     // ================================
-    // CHUYEN ORDER -> DTO
+    // ORDER -> DTO
     // ================================
     private OrderResponseDTO toDTO(
             Order order
     ) {
 
         List<OrderItem> items =
-                orderItemRepository.findByOrderId(
-                        order.getId()
-                );
+                orderItemRepository
+                        .findByOrderId(
+                                order.getId()
+                        );
 
-        return toDTO(order, items);
+        return toDTO(
+                order,
+                items
+        );
     }
 
     private OrderResponseDTO toDTO(
@@ -323,6 +765,9 @@ public class OrderService {
         );
     }
 
+    // ================================
+    // ORDER ITEM -> DTO
+    // ================================
     private OrderItemResponseDTO toItemDTO(
             OrderItem item
     ) {
@@ -331,14 +776,16 @@ public class OrderService {
                 item.getId(),
                 item.getProduct().getId(),
                 item.getProductName(),
+                item.getSize(),
                 item.getUnitPrice(),
                 item.getQuantity(),
                 item.getSubtotal()
         );
     }
+
     // ================================
-// ADMIN - LAY TAT CA DON HANG
-// ================================
+    // ADMIN - TAT CA DON
+    // ================================
     @Transactional(readOnly = true)
     public List<OrderResponseDTO> getAllOrders() {
 
@@ -350,107 +797,126 @@ public class OrderService {
     }
 
     // ================================
-// ADMIN - XEM CHI TIET DON HANG
-// ================================
+    // ADMIN - CHI TIET DON
+    // ================================
     @Transactional(readOnly = true)
     public OrderResponseDTO getOrderById(
             Long orderId
     ) {
 
-        Order order = orderRepository
-                .findById(orderId)
-                .orElseThrow(
-                        () -> new NoSuchElementException(
-                                "Khong tim thay don hang"
-                        )
-                );
+        Order order =
+                orderRepository
+                        .findById(orderId)
+                        .orElseThrow(
+                                () -> new NoSuchElementException(
+                                        "Khong tim thay don hang"
+                                )
+                        );
 
         return toDTO(order);
     }
 
     // ================================
-// ADMIN - CAP NHAT TRANG THAI
-// ================================
+    // ADMIN - CAP NHAT TRANG THAI
+    // ================================
     public OrderResponseDTO updateOrderStatus(
             Long orderId,
             UpdateOrderStatusRequestDTO request
     ) {
 
-        Order order = orderRepository
-                .findById(orderId)
-                .orElseThrow(
-                        () -> new NoSuchElementException(
-                                "Khong tim thay don hang"
-                        )
-                );
+        Order order =
+                orderRepository
+                        .findById(orderId)
+                        .orElseThrow(
+                                () -> new NoSuchElementException(
+                                        "Khong tim thay don hang"
+                                )
+                        );
 
-        String currentStatus = order.getStatus();
-        String newStatus = request.getStatus();
+        String currentStatus =
+                order.getStatus();
 
-        // =================================
-        // DON DA HUY KHONG DUOC MO LAI
-        // =================================
-        if ("CANCELLED".equals(currentStatus)
-                && !"CANCELLED".equals(newStatus)) {
+        String newStatus =
+                request.getStatus();
+
+        // Don da huy -> khong mo lai
+        if ("CANCELLED".equals(
+                currentStatus
+        )
+                && !"CANCELLED".equals(
+                newStatus
+        )) {
 
             throw new IllegalArgumentException(
                     "Don hang da huy khong the cap nhat lai"
             );
         }
 
-        // =================================
-        // DON HOAN THANH KHONG DUOC DOI LAI
-        // =================================
-        if ("COMPLETED".equals(currentStatus)
-                && !"COMPLETED".equals(newStatus)) {
+        // Don hoan thanh -> khong doi lai
+        if ("COMPLETED".equals(
+                currentStatus
+        )
+                && !"COMPLETED".equals(
+                newStatus
+        )) {
 
             throw new IllegalArgumentException(
                     "Don hang da hoan thanh khong the cap nhat lai"
             );
         }
 
-        // =================================
-        // HUY DON -> HOAN TON KHO
-        // =================================
-        if ("CANCELLED".equals(newStatus)
-                && !"CANCELLED".equals(currentStatus)) {
+        // Huy don -> hoan ton kho
+        if ("CANCELLED".equals(
+                newStatus
+        )
+                && !"CANCELLED".equals(
+                currentStatus
+        )) {
 
             List<OrderItem> orderItems =
-                    orderItemRepository.findByOrderId(
-                            order.getId()
-                    );
+                    orderItemRepository
+                            .findByOrderId(
+                                    order.getId()
+                            );
 
-            for (OrderItem orderItem : orderItems) {
+            for (OrderItem orderItem
+                    : orderItems) {
 
-                Product product = productRepository
-                        .findById(
-                                orderItem.getProduct().getId()
-                        )
-                        .orElseThrow(
-                                () -> new NoSuchElementException(
-                                        "Khong tim thay san pham"
+                Product product =
+                        productRepository
+                                .findById(
+                                        orderItem
+                                                .getProduct()
+                                                .getId()
                                 )
-                        );
-
-                int oldStock =
-                        product.getStockQuantity();
-
-                int refundQuantity =
-                        orderItem.getQuantity();
+                                .orElseThrow(
+                                        () -> new NoSuchElementException(
+                                                "Khong tim thay san pham"
+                                        )
+                                );
 
                 product.setStockQuantity(
-                        oldStock + refundQuantity
+                        product.getStockQuantity()
+                                + orderItem.getQuantity()
                 );
 
-                productRepository.save(product);
+                productRepository.save(
+                        product
+                );
             }
         }
 
-        order.setStatus(newStatus);
+        order.setStatus(
+                newStatus
+        );
 
         Order savedOrder =
-                orderRepository.save(order);
+                orderRepository.save(
+                        order
+                );
 
-        return toDTO(savedOrder);
+        return toDTO(
+                savedOrder
+        );
     }
 }

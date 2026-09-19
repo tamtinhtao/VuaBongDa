@@ -13,7 +13,8 @@ import vn.edu.vuabongda.product.entity.Product;
                 @UniqueConstraint(
                         columnNames = {
                                 "cart_id",
-                                "product_id"
+                                "product_id",
+                                "size"
                         }
                 )
         }
@@ -40,6 +41,9 @@ public class CartItem {
             nullable = false
     )
     private Product product;
+
+    @Column(length = 20)
+    private String size;
 
     @Column(nullable = false)
     private Integer quantity;

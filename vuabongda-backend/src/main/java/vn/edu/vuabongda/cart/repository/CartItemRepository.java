@@ -11,7 +11,13 @@ public interface CartItemRepository
 
     List<CartItem> findByCartId(Long cartId);
 
-    Optional<CartItem> findByCartIdAndProductId(
+    Optional<CartItem> findByCartIdAndProductIdAndSize(
+            Long cartId,
+            Long productId,
+            String size
+    );
+
+    Optional<CartItem> findByCartIdAndProductIdAndSizeIsNull(
             Long cartId,
             Long productId
     );

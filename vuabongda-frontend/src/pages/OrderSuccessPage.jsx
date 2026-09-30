@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import {
+  Link,
   useNavigate,
   useParams,
 } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
 
 function OrderSuccessPage() {
-  const navigate = useNavigate();
   const { orderId } = useParams();
+  const navigate = useNavigate();
 
   const [order, setOrder] =
     useState(null);
@@ -22,63 +23,22 @@ function OrderSuccessPage() {
     useState("");
 
   // ================================
-  // LOAD ORDER + PAYMENT
-  // ================================
-  useEffect(() => {
-    const loadOrder = async () => {
-      try {
-        const orderResponse =
-          await axiosClient.get(
-            `/api/orders/${orderId}`
-          );
-
-        setOrder(orderResponse.data);
-
-        const paymentResponse =
-          await axiosClient.get(
-            `/api/payments/order/${orderId}`
-          );
-
-        setPayment(
-          paymentResponse.data
-        );
-
-        console.log(
-          "ORDER:",
-          orderResponse.data
-        );
-
-        console.log(
-          "PAYMENT:",
-          paymentResponse.data
-        );
-      } catch (err) {
-        console.error(
-          "LOAD ORDER THAT BAI:",
-          err
-        );
-
-        setError(
-          err.response?.data?.message ||
-          "Không thể tải thông tin đơn hàng"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadOrder();
-  }, [orderId]);
-
-  // ================================
   // FORMAT PRICE
   // ================================
-  const formatPrice = (price) => {
-    return (
-      Number(price || 0).toLocaleString(
-        "vi-VN"
-      ) + " đ"
-    );
+  const formatPrice = (value) =>
+    Number(value || 0).toLocaleString(
+      "vi-VN"
+    ) + " đ";
+
+  // ================================
+  // FORMAT DATE
+  // ================================
+  const formatDate = (value) => {
+    if (!value) return "";
+
+    return new Date(
+      value
+    ).toLocaleString("vi-VN");
   };
 
   // ================================
@@ -87,25 +47,17 @@ function OrderSuccessPage() {
   const getOrderStatusLabel = (
     status
   ) => {
-    switch (status) {
-      case "PENDING":
-        return "Chờ xác nhận";
+    const labels = {
+      PENDING: "Chờ xác nhận",
+      CONFIRMED: "Đã xác nhận",
+      SHIPPING: "Đang giao hàng",
+      COMPLETED: "Hoàn thành",
+      CANCELLED: "Đã hủy",
+    };
 
-      case "CONFIRMED":
-        return "Đã xác nhận";
-
-      case "SHIPPING":
-        return "Đang giao hàng";
-
-      case "COMPLETED":
-        return "Đã hoàn thành";
-
-      case "CANCELLED":
-        return "Đã hủy";
-
-      default:
-        return status || "Chưa xác định";
-    }
+    return (
+      labels[status] || status
+    );
   };
 
   // ================================
@@ -114,16 +66,20 @@ function OrderSuccessPage() {
   const getPaymentMethodLabel = (
     method
   ) => {
-    switch (method) {
-      case "COD":
-        return "Thanh toán khi nhận hàng (COD)";
-
-      case "BANK_TRANSFER":
-        return "Chuyển khoản ngân hàng";
-
-      default:
-        return method || "Chưa xác định";
+    if (
+      method === "COD"
+    ) {
+      return "Thanh toán khi nhận hàng (COD)";
     }
+
+    if (
+      method ===
+      "BANK_TRANSFER"
+    ) {
+      return "Chuyển khoản ngân hàng";
+    }
+
+    return method || "Chưa cập nhật";
   };
 
   // ================================
@@ -132,200 +88,373 @@ function OrderSuccessPage() {
   const getPaymentStatusLabel = (
     status
   ) => {
-    switch (status) {
-      case "PENDING":
-        return "Chờ thanh toán";
+    const labels = {
+      PENDING: "Chờ thanh toán",
+      PAID: "Đã thanh toán",
+      FAILED: "Thanh toán thất bại",
+      CANCELLED: "Đã hủy",
+    };
 
-      case "PAID":
-        return "Đã thanh toán";
-
-      case "FAILED":
-        return "Thanh toán thất bại";
-
-      case "CANCELLED":
-        return "Đã hủy";
-
-      default:
-        return status || "Chưa xác định";
-    }
+    return (
+      labels[status] ||
+      status ||
+      "Chưa cập nhật"
+    );
   };
+
+  // ================================
+  // LOAD
+  // ================================
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const orderResponse =
+          await axiosClient.get(
+            `/api/orders/${orderId}`
+          );
+
+        setOrder(
+          orderResponse.data
+        );
+
+        /*
+         * Payment loi thi van cho xem
+         * Order Success.
+         */
+        try {
+          const paymentResponse =
+            await axiosClient.get(
+              `/api/payments/order/${orderId}`
+            );
+
+          setPayment(
+            paymentResponse.data
+          );
+        } catch (
+        paymentError
+        ) {
+          console.error(
+            "LOAD PAYMENT THAT BAI:",
+            paymentError
+          );
+
+          setPayment(null);
+        }
+      } catch (err) {
+        console.error(
+          "LOAD ORDER THAT BAI:",
+          err
+        );
+
+        setError(
+          err.response?.data
+            ?.message ||
+          "Không thể tải thông tin đơn hàng."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [orderId]);
 
   if (loading) {
     return (
-      <p>
-        Đang tải thông tin đơn hàng...
-      </p>
+      <div className="order-page-message">
+        Đang tải đơn hàng...
+      </div>
     );
   }
 
   if (error) {
     return (
-      <div>
-        <h2>{error}</h2>
+      <div className="order-page-message">
+        <p>{error}</p>
 
         <button
           type="button"
           onClick={() =>
-            navigate("/")
+            navigate("/orders")
           }
         >
-          Về trang chủ
+          Xem đơn hàng
         </button>
       </div>
     );
   }
 
+  if (!order) {
+    return null;
+  }
+
+  const originalAmount =
+    Number(
+      order.originalAmount ??
+      order.totalAmount ??
+      0
+    );
+
+  const discountAmount =
+    Number(
+      order.discountAmount || 0
+    );
+
   return (
-    <div>
-      <h1>Đặt hàng thành công</h1>
+    <main className="order-view-page">
+      <div className="order-view-container">
 
-      <p>
-        Mã đơn hàng:{" "}
-        <strong>
-          #{order?.id}
-        </strong>
-      </p>
+        {/* SUCCESS */}
+        <section className="order-success-heading">
+          <div className="order-success-icon">
+            ✓
+          </div>
 
-      <p>
-        Trạng thái:{" "}
-        <strong>
-          {getOrderStatusLabel(
-            order?.status
-          )}
-        </strong>
-      </p>
+          <p className="order-eyebrow">
+            VUABONGDA STORE
+          </p>
 
-      <hr />
+          <h1>
+            Đặt hàng thành công
+          </h1>
 
-      {/* SHIPPING */}
-      <h2>Thông tin giao hàng</h2>
+          <p>
+            Cảm ơn bạn đã đặt hàng.
+            Đơn hàng của bạn đã được
+            hệ thống tiếp nhận.
+          </p>
+        </section>
 
-      <p>
-        Người nhận:{" "}
-        <strong>
-          {order?.recipientName}
-        </strong>
-      </p>
+        <div className="order-view-layout">
 
-      <p>
-        Số điện thoại:{" "}
-        {order?.phone}
-      </p>
+          {/* LEFT */}
+          <section className="order-view-main">
 
-      <p>
-        Địa chỉ:{" "}
-        {order?.shippingAddress}
-      </p>
+            <div className="order-info-box">
+              <div className="order-box-heading">
+                <h2>
+                  Đơn hàng #{order.id}
+                </h2>
 
-      <hr />
+                <span className="order-status-badge">
+                  {getOrderStatusLabel(
+                    order.status
+                  )}
+                </span>
+              </div>
 
-      {/* PRODUCTS */}
-      <h2>Sản phẩm</h2>
-
-      {order?.items?.map(
-        (item) => (
-          <div key={item.id}>
-            <h3>
-              {item.productName}
-            </h3>
-
-            {/* SIZE */}
-            {item.size && (
-              <p>
-                Size:{" "}
-                <strong>
-                  {item.size}
-                </strong>
+              <p className="order-created-date">
+                Ngày đặt:{" "}
+                {formatDate(
+                  order.createdAt
+                )}
               </p>
+
+              <div className="order-product-list">
+                {(order.items || []).map(
+                  (item) => (
+                    <div
+                      className="order-product-row"
+                      key={item.id}
+                    >
+                      <div>
+                        <strong>
+                          {
+                            item.productName
+                          }
+                        </strong>
+
+                        {item.size && (
+                          <p>
+                            Size:{" "}
+                            {item.size}
+                          </p>
+                        )}
+
+                        <p>
+                          Số lượng:{" "}
+                          {
+                            item.quantity
+                          }
+                        </p>
+
+                        <p>
+                          Đơn giá:{" "}
+                          {formatPrice(
+                            item.unitPrice
+                          )}
+                        </p>
+                      </div>
+
+                      <strong className="order-product-subtotal">
+                        {formatPrice(
+                          item.subtotal
+                        )}
+                      </strong>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+
+            {/* SHIPPING */}
+            <div className="order-info-box">
+              <h2>
+                Thông tin nhận hàng
+              </h2>
+
+              <div className="order-info-grid">
+                <div>
+                  <span>
+                    Người nhận
+                  </span>
+                  <strong>
+                    {
+                      order.recipientName
+                    }
+                  </strong>
+                </div>
+
+                <div>
+                  <span>
+                    Số điện thoại
+                  </span>
+                  <strong>
+                    {order.phone}
+                  </strong>
+                </div>
+
+                <div className="order-info-full">
+                  <span>
+                    Địa chỉ
+                  </span>
+                  <strong>
+                    {
+                      order.shippingAddress
+                    }
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            {/* PAYMENT */}
+            {payment && (
+              <div className="order-info-box">
+                <h2>
+                  Thanh toán
+                </h2>
+
+                <div className="order-info-grid">
+                  <div>
+                    <span>
+                      Phương thức
+                    </span>
+
+                    <strong>
+                      {getPaymentMethodLabel(
+                        payment.paymentMethod ||
+                        payment.method
+                      )}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      Trạng thái
+                    </span>
+
+                    <strong>
+                      {getPaymentStatusLabel(
+                        payment.status
+                      )}
+                    </strong>
+                  </div>
+                </div>
+              </div>
             )}
+          </section>
 
-            <p>
-              Giá:{" "}
-              {formatPrice(
-                item.unitPrice
-              )}
-            </p>
+          {/* SUMMARY */}
+          <aside className="order-total-box">
+            <h2>
+              Tổng thanh toán
+            </h2>
 
-            <p>
-              Số lượng:{" "}
-              {item.quantity}
-            </p>
+            <div className="order-total-row">
+              <span>
+                Tạm tính
+              </span>
 
-            <p>
-              Thành tiền:{" "}
               <strong>
                 {formatPrice(
-                  item.subtotal
+                  originalAmount
                 )}
               </strong>
-            </p>
+            </div>
 
-            <hr />
-          </div>
-        )
-      )}
+            <div className="order-total-row">
+              <span>
+                Khuyến mãi
+              </span>
 
-      <h2>
-        Tổng tiền:{" "}
-        {formatPrice(
-          order?.totalAmount
-        )}
-      </h2>
+              <strong
+                className={
+                  discountAmount > 0
+                    ? "order-discount"
+                    : ""
+                }
+              >
+                {discountAmount > 0
+                  ? `- ${formatPrice(
+                    discountAmount
+                  )}`
+                  : "0 đ"}
+              </strong>
+            </div>
 
-      <hr />
+            {order.promotionCode && (
+              <div className="order-promotion-used">
+                Mã đã sử dụng:
+                <strong>
+                  {
+                    order.promotionCode
+                  }
+                </strong>
+              </div>
+            )}
 
-      {/* PAYMENT */}
-      <h2>Thanh toán</h2>
+            <div className="order-final-total">
+              <span>
+                Tổng cộng
+              </span>
 
-      <p>
-        Phương thức:{" "}
-        <strong>
-          {getPaymentMethodLabel(
-            payment?.paymentMethod
-          )}
-        </strong>
-      </p>
+              <strong>
+                {formatPrice(
+                  order.totalAmount
+                )}
+              </strong>
+            </div>
 
-      <p>
-        Trạng thái thanh toán:{" "}
-        <strong>
-          {getPaymentStatusLabel(
-            payment?.status
-          )}
-        </strong>
-      </p>
+            <Link
+              to="/orders"
+              className="order-primary-action"
+            >
+              Xem đơn hàng của tôi
+            </Link>
 
-      <p>
-        Số tiền:{" "}
-        <strong>
-          {formatPrice(
-            payment?.amount
-          )}
-        </strong>
-      </p>
-
-      <br />
-
-      <button
-        type="button"
-        onClick={() =>
-          navigate("/")
-        }
-      >
-        Tiếp tục mua hàng
-      </button>
-
-      {" "}
-
-      <button
-        type="button"
-        onClick={() =>
-          navigate("/orders")
-        }
-      >
-        Xem đơn hàng của tôi
-      </button>
-    </div>
+            <Link
+              to="/products"
+              className="order-secondary-action"
+            >
+              Tiếp tục mua sắm
+            </Link>
+          </aside>
+        </div>
+      </div>
+    </main>
   );
 }
 

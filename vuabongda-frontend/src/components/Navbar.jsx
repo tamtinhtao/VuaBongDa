@@ -1,15 +1,27 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import {
   Link,
   NavLink,
   useLocation,
   useNavigate,
 } from "react-router-dom";
+
 import axiosClient from "../api/axiosClient";
 
 function Navbar() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate =
+    useNavigate();
+
+  const location =
+    useLocation();
+
+  const dropdownRef =
+    useRef(null);
 
   const [keyword, setKeyword] =
     useState("");
@@ -17,70 +29,97 @@ function Navbar() {
   const [cartCount, setCartCount] =
     useState(0);
 
+  const [
+    userMenuOpen,
+    setUserMenuOpen,
+  ] = useState(false);
+
   const token =
-    localStorage.getItem("vb_token");
+    localStorage.getItem(
+      "vb_token"
+    );
 
   const username =
-    localStorage.getItem("vb_username");
+    localStorage.getItem(
+      "vb_username"
+    );
 
   const role =
-    localStorage.getItem("vb_role");
+    localStorage.getItem(
+      "vb_role"
+    );
 
   // ================================
   // LOAD CART COUNT
   // ================================
-  const loadCartCount = async () => {
-    const currentToken =
-      localStorage.getItem("vb_token");
-
-    const currentRole =
-      localStorage.getItem("vb_role");
-
-    if (
-      !currentToken ||
-      currentRole !== "CUSTOMER"
-    ) {
-      setCartCount(0);
-      return;
-    }
-
-    try {
-      const response =
-        await axiosClient.get(
-          "/api/cart"
+  const loadCartCount =
+    async () => {
+      const currentToken =
+        localStorage.getItem(
+          "vb_token"
         );
 
-      const items =
-        response.data?.items || [];
-
-      // Tong quantity
-      const count =
-        items.reduce(
-          (total, item) =>
-            total +
-            Number(
-              item.quantity || 0
-            ),
-          0
+      const currentRole =
+        localStorage.getItem(
+          "vb_role"
         );
 
-      setCartCount(count);
-    } catch (error) {
-      console.error(
-        "LOAD CART COUNT THAT BAI:",
-        error
-      );
+      if (
+        !currentToken ||
+        currentRole !==
+        "CUSTOMER"
+      ) {
+        setCartCount(0);
+        return;
+      }
 
-      setCartCount(0);
-    }
-  };
+      try {
+        const response =
+          await axiosClient.get(
+            "/api/cart"
+          );
+
+        const items =
+          response.data?.items ||
+          [];
+
+        const count =
+          items.reduce(
+            (
+              total,
+              item
+            ) =>
+              total +
+              Number(
+                item.quantity ||
+                0
+              ),
+            0
+          );
+
+        setCartCount(count);
+      } catch (error) {
+        console.error(
+          "LOAD CART COUNT THAT BAI:",
+          error
+        );
+
+        setCartCount(0);
+      }
+    };
 
   // ================================
-  // LOAD KHI DOI TRANG / LOGIN
+  // LOAD KHI DOI TRANG
   // ================================
   useEffect(() => {
     loadCartCount();
-  }, [location.pathname]);
+
+    // Doi trang thi dong dropdown
+    setUserMenuOpen(false);
+  }, [
+    location.pathname,
+    location.search,
+  ]);
 
   // ================================
   // LANG NGHE CART UPDATED
@@ -100,6 +139,37 @@ function Navbar() {
       window.removeEventListener(
         "cart-updated",
         handleCartUpdated
+      );
+    };
+  }, []);
+
+  // ================================
+  // BAM RA NGOAI -> DONG MENU
+  // ================================
+  useEffect(() => {
+    const handleOutsideClick =
+      (event) => {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(
+            event.target
+          )
+        ) {
+          setUserMenuOpen(
+            false
+          );
+        }
+      };
+
+    document.addEventListener(
+      "mousedown",
+      handleOutsideClick
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleOutsideClick
       );
     };
   }, []);
@@ -134,13 +204,17 @@ function Navbar() {
 
     setCartCount(0);
 
+    setUserMenuOpen(false);
+
     navigate("/login");
   };
 
   // ================================
   // SEARCH
   // ================================
-  const handleSearch = (e) => {
+  const handleSearch = (
+    e
+  ) => {
     e.preventDefault();
 
     const value =
@@ -157,6 +231,27 @@ function Navbar() {
     }
   };
 
+  // ================================
+  // PROFILE
+  // ================================
+  const handleProfile = () => {
+    setUserMenuOpen(false);
+
+    navigate("/customer");
+  };
+
+  // ================================
+  // CHANGE PASSWORD
+  // ================================
+  const handleChangePassword =
+    () => {
+      setUserMenuOpen(false);
+
+      navigate(
+        "/customer?tab=password"
+      );
+    };
+
   const navClass = ({
     isActive,
   }) =>
@@ -167,8 +262,9 @@ function Navbar() {
   return (
     <header className="shop-header">
       <div className="shop-navbar">
-
-        {/* LOGO */}
+        {/* =====================
+            LOGO
+        ===================== */}
         <Link
           to="/"
           className="shop-logo"
@@ -188,12 +284,16 @@ function Navbar() {
           </div>
         </Link>
 
-        {/* MAIN NAV */}
+        {/* =====================
+            MAIN NAV
+        ===================== */}
         <nav className="shop-nav">
           <NavLink
             to="/"
             end
-            className={navClass}
+            className={
+              navClass
+            }
           >
             Trang chủ
           </NavLink>
@@ -227,10 +327,14 @@ function Navbar() {
           </Link>
         </nav>
 
-        {/* SEARCH */}
+        {/* =====================
+            SEARCH
+        ===================== */}
         <form
           className="shop-search"
-          onSubmit={handleSearch}
+          onSubmit={
+            handleSearch
+          }
         >
           <input
             type="text"
@@ -248,9 +352,10 @@ function Navbar() {
           </button>
         </form>
 
-        {/* ACTIONS */}
+        {/* =====================
+            ACTIONS
+        ===================== */}
         <div className="shop-actions">
-
           {/* GUEST */}
           {!token && (
             <>
@@ -270,26 +375,32 @@ function Navbar() {
             </>
           )}
 
-          {/* CUSTOMER */}
+          {/* =====================
+              CUSTOMER
+          ===================== */}
           {token &&
-            role === "CUSTOMER" && (
+            role ===
+            "CUSTOMER" && (
               <>
-                {/* CART + BADGE */}
+                {/* CART */}
                 <Link
                   to="/cart"
                   className="header-text-link cart-nav-link"
                 >
                   Giỏ hàng
 
-                  {cartCount > 0 && (
-                    <span className="cart-badge">
-                      {cartCount > 99
-                        ? "99+"
-                        : cartCount}
-                    </span>
-                  )}
+                  {cartCount >
+                    0 && (
+                      <span className="cart-badge">
+                        {cartCount >
+                          99
+                          ? "99+"
+                          : cartCount}
+                      </span>
+                    )}
                 </Link>
 
+                {/* ORDERS */}
                 <Link
                   to="/orders"
                   className="header-text-link"
@@ -297,29 +408,141 @@ function Navbar() {
                   Đơn hàng
                 </Link>
 
-                <div className="header-user">
-                  <strong>
-                    {username}
-                  </strong>
-
-                  <small>
-                    Khách hàng
-                  </small>
-                </div>
-
-                <button
-                  type="button"
-                  className="header-logout"
-                  onClick={logout}
+                {/* USER DROPDOWN */}
+                <div
+                  className="header-user-dropdown"
+                  ref={
+                    dropdownRef
+                  }
                 >
-                  Đăng xuất
-                </button>
+                  <button
+                    type="button"
+                    className="header-user-trigger"
+                    onClick={() =>
+                      setUserMenuOpen(
+                        (
+                          current
+                        ) =>
+                          !current
+                      )
+                    }
+                  >
+                    <div className="header-user-avatar">
+                      {username
+                        ?.charAt(0)
+                        ?.toUpperCase() ||
+                        "U"}
+                    </div>
+
+                    <div className="header-user-trigger-info">
+                      <strong>
+                        {username}
+                      </strong>
+
+                      <small>
+                        Khách hàng
+                      </small>
+                    </div>
+
+                    <span
+                      className={`header-user-arrow ${userMenuOpen
+                          ? "open"
+                          : ""
+                        }`}
+                    >
+                      ▼
+                    </span>
+                  </button>
+
+                  {userMenuOpen && (
+                    <div className="header-user-menu">
+                      <div className="header-user-menu-head">
+                        <strong>
+                          {username}
+                        </strong>
+
+                        <span>
+                          Tài khoản khách hàng
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={
+                          handleProfile
+                        }
+                      >
+                        <span className="header-dropdown-icon">
+                          👤
+                        </span>
+
+                        <div>
+                          <strong>
+                            Thông tin tài khoản
+                          </strong>
+
+                          <small>
+                            Xem và chỉnh sửa hồ sơ
+                          </small>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={
+                          handleChangePassword
+                        }
+                      >
+                        <span className="header-dropdown-icon">
+                          🔒
+                        </span>
+
+                        <div>
+                          <strong>
+                            Đổi mật khẩu
+                          </strong>
+
+                          <small>
+                            Cập nhật mật khẩu đăng nhập
+                          </small>
+                        </div>
+                      </button>
+
+                      <div className="header-user-menu-divider" />
+
+                      <button
+                        type="button"
+                        className="header-dropdown-logout"
+                        onClick={
+                          logout
+                        }
+                      >
+                        <span className="header-dropdown-icon">
+                          ↪
+                        </span>
+
+                        <div>
+                          <strong>
+                            Đăng xuất
+                          </strong>
+
+                          <small>
+                            Thoát khỏi tài khoản
+                          </small>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             )}
 
-          {/* ADMIN */}
+          {/* =====================
+              ADMIN
+          ===================== */}
           {token &&
-            role === "ADMIN" && (
+            role ===
+            "ADMIN" && (
               <>
                 <Link
                   to="/admin"
@@ -341,7 +564,9 @@ function Navbar() {
                 <button
                   type="button"
                   className="header-logout"
-                  onClick={logout}
+                  onClick={
+                    logout
+                  }
                 >
                   Đăng xuất
                 </button>

@@ -49,8 +49,11 @@ public class ProductService {
         product.setStockQuantity(dto.getStockQuantity());
         product.setImageUrl(dto.getImageUrl());
         product.setBrand(dto.getBrand());
-        product.setStatus("ACTIVE");
-        product.setCategory(category);
+        if (dto.getStockQuantity() <= 0) {
+            product.setStatus("OUT_OF_STOCK");
+        } else {
+            product.setStatus("ACTIVE");
+        }        product.setCategory(category);
 
         Product saved = productRepository.save(product);
 
@@ -100,41 +103,116 @@ public class ProductService {
     }
 
     // =========================
-    // UPDATE
-    // =========================
+// UPDATE
+// =========================
     public ProductResponseDTO update(
             Long id,
             ProductRequestDTO dto
     ) {
 
-        Product product = productRepository
-                .findById(id)
-                .orElseThrow(() ->
-                        new NoSuchElementException(
-                                "Khong tim thay san pham id = " + id
+        Product product =
+                productRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () -> new NoSuchElementException(
+                                        "Khong tim thay san pham id = "
+                                                + id
+                                )
+                        );
+
+        Category category =
+                categoryRepository
+                        .findById(
+                                dto.getCategoryId()
                         )
+                        .orElseThrow(
+                                () -> new NoSuchElementException(
+                                        "Khong tim thay danh muc id = "
+                                                + dto.getCategoryId()
+                                )
+                        );
+
+        product.setName(
+                dto.getName()
+        );
+
+        product.setDescription(
+                dto.getDescription()
+        );
+
+        product.setPrice(
+                dto.getPrice()
+        );
+
+        product.setStockQuantity(
+                dto.getStockQuantity()
+        );
+
+        product.setImageUrl(
+                dto.getImageUrl()
+        );
+
+        product.setBrand(
+                dto.getBrand()
+        );
+
+        product.setCategory(
+                category
+        );
+
+        // ================================
+// TRANG THAI SAN PHAM
+// ================================
+
+// Het ton kho -> bat buoc OUT_OF_STOCK
+        if (dto.getStockQuantity() <= 0) {
+
+            product.setStatus(
+                    "OUT_OF_STOCK"
+            );
+
+        } else {
+
+            String requestedStatus =
+                    dto.getStatus();
+
+            /*
+             * Neu tang ton kho lai tu 0 len > 0
+             * ma frontend van gui OUT_OF_STOCK,
+             * tu dong dua san pham ve ACTIVE.
+             */
+            if (
+                    requestedStatus == null
+                            ||
+                            requestedStatus.isBlank()
+                            ||
+                            "OUT_OF_STOCK".equalsIgnoreCase(
+                                    requestedStatus
+                            )
+            ) {
+
+                product.setStatus(
+                        "ACTIVE"
                 );
 
-        Category category = categoryRepository
-                .findById(dto.getCategoryId())
-                .orElseThrow(() ->
-                        new NoSuchElementException(
-                                "Khong tim thay danh muc id = "
-                                        + dto.getCategoryId()
-                        )
+            } else {
+
+                product.setStatus(
+                        requestedStatus
+                                .trim()
+                                .toUpperCase()
+                );
+            }
+        }
+
+        Product saved =
+                productRepository.save(
+                        product
                 );
 
-        product.setName(dto.getName());
-        product.setDescription(dto.getDescription());
-        product.setPrice(dto.getPrice());
-        product.setStockQuantity(dto.getStockQuantity());
-        product.setImageUrl(dto.getImageUrl());
-        product.setBrand(dto.getBrand());
-        product.setCategory(category);
-
-        Product saved = productRepository.save(product);
-
-        return toDTO(saved);
+        return toDTO(
+                saved
+        );
     }
 
     // =========================

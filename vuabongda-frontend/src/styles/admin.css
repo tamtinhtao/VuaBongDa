@@ -1,0 +1,3058 @@
+/* =========================================
+   VUABONGDA ADMIN
+========================================= */
+
+.vb-admin-layout {
+    min-height: 100vh;
+    display: flex;
+    background: #f4f6f9;
+    color: #1f2937;
+}
+
+/* SIDEBAR */
+
+.vb-admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+
+    width: 245px;
+
+    display: flex;
+    flex-direction: column;
+
+    background: #1f2d3d;
+    color: #ffffff;
+
+    z-index: 100;
+}
+
+.vb-admin-brand {
+    height: 66px;
+
+    display: flex;
+    align-items: center;
+    gap: 11px;
+
+    padding: 0 19px;
+
+    background: #243447;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vb-admin-brand-icon {
+    width: 37px;
+    height: 37px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 6px;
+
+    background: #15803d;
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.vb-admin-brand div:last-child {
+    display: flex;
+    flex-direction: column;
+}
+
+.vb-admin-brand strong {
+    font-size: 17px;
+}
+
+.vb-admin-brand span {
+    margin-top: 2px;
+    color: #aab8c7;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+}
+
+.vb-admin-profile {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+
+    padding: 17px 18px;
+}
+
+.vb-admin-avatar {
+    width: 39px;
+    height: 39px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #ffffff;
+    color: #1f2d3d;
+
+    font-weight: 800;
+}
+
+.vb-admin-profile>div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.vb-admin-profile strong {
+    font-size: 13px;
+}
+
+.vb-admin-profile span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    color: #b8c5d1;
+    font-size: 10px;
+}
+
+.vb-admin-profile i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+}
+
+.vb-admin-menu-title {
+    margin: 10px 18px 8px;
+
+    color: #8392a2;
+
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.vb-admin-menu {
+    display: flex;
+    flex-direction: column;
+}
+
+.vb-admin-menu-item {
+    min-height: 45px;
+
+    display: flex;
+    align-items: center;
+    gap: 11px;
+
+    padding: 0 18px;
+
+    border-left: 3px solid transparent;
+
+    color: #c8d2dc;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    text-decoration: none;
+
+    transition: 0.15s ease;
+}
+
+.vb-admin-menu-item:hover {
+    background: #26384c;
+    color: #ffffff;
+}
+
+.vb-admin-menu-item.active {
+    border-left-color: #3498db;
+    background: #172331;
+    color: #ffffff;
+}
+
+.vb-admin-menu-icon {
+    width: 21px;
+
+    text-align: center;
+
+    color: #9fb0c0;
+
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.vb-admin-sidebar-bottom {
+    margin-top: auto;
+    padding: 17px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vb-admin-view-site {
+    color: #b9c7d5;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.vb-admin-view-site:hover {
+    color: #ffffff;
+}
+
+/* MAIN */
+
+.vb-admin-main {
+    width: calc(100% - 245px);
+    min-height: 100vh;
+    margin-left: 245px;
+}
+
+/* HEADER */
+
+.vb-admin-header {
+    min-height: 66px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 24px;
+
+    background: #3c8dbc;
+    color: #ffffff;
+
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.vb-admin-header-left,
+.vb-admin-header-right {
+    display: flex;
+    align-items: center;
+}
+
+.vb-admin-header-left {
+    gap: 14px;
+}
+
+.vb-admin-toggle {
+    font-size: 18px;
+}
+
+.vb-admin-header-left h1 {
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.vb-admin-header-left p {
+    margin: 2px 0 0;
+
+    color: #dcecf5;
+
+    font-size: 10px;
+}
+
+.vb-admin-header-right {
+    gap: 15px;
+}
+
+.vb-admin-site-button,
+.vb-admin-logout {
+    padding: 8px 12px;
+
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    border-radius: 4px;
+
+    background: transparent;
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.vb-admin-site-button:hover,
+.vb-admin-logout:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.vb-admin-header-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vb-admin-header-avatar {
+    width: 31px;
+    height: 31px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #ffffff;
+    color: #3c8dbc;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.vb-admin-header-user>div:last-child {
+    display: flex;
+    flex-direction: column;
+}
+
+.vb-admin-header-user strong {
+    font-size: 11px;
+}
+
+.vb-admin-header-user span {
+    color: #dcecf5;
+    font-size: 9px;
+}
+
+/* CONTENT */
+
+.vb-admin-content {
+    min-height: calc(100vh - 66px);
+    padding: 22px;
+}
+
+/* DASHBOARD */
+
+.vb-admin-page-heading {
+    margin-bottom: 19px;
+}
+
+.vb-admin-page-heading h2 {
+    margin: 0;
+
+    color: #333333;
+
+    font-size: 22px;
+    font-weight: 500;
+}
+
+.vb-admin-page-heading p {
+    margin: 5px 0 0;
+    color: #8b97a3;
+    font-size: 12px;
+}
+
+.vb-admin-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+
+    margin-bottom: 23px;
+}
+
+.vb-admin-stat {
+    position: relative;
+    overflow: hidden;
+
+    min-height: 122px;
+
+    color: #ffffff;
+}
+
+.vb-admin-stat-content {
+    padding: 15px 17px 13px;
+}
+
+.vb-admin-stat h3 {
+    margin: 0;
+
+    font-size: 29px;
+    font-weight: 700;
+}
+
+.vb-admin-stat p {
+    margin: 7px 0 0;
+
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.vb-admin-stat-icon {
+    position: absolute;
+
+    right: 14px;
+    top: 8px;
+
+    color: rgba(0, 0, 0, 0.13);
+
+    font-size: 55px;
+    font-weight: 700;
+}
+
+.vb-admin-stat-link {
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    padding: 7px;
+
+    background: rgba(0, 0, 0, 0.12);
+    color: #ffffff;
+
+    text-align: center;
+    text-decoration: none;
+
+    font-size: 10px;
+}
+
+.vb-admin-blue {
+    background: #00c0ef;
+}
+
+.vb-admin-green {
+    background: #00a65a;
+}
+
+.vb-admin-orange {
+    background: #f39c12;
+}
+
+.vb-admin-red {
+    background: #dd4b39;
+}
+
+/* PANELS */
+
+.vb-admin-dashboard-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 20px;
+}
+
+.vb-admin-panel {
+    background: #ffffff;
+    border-top: 3px solid #3c8dbc;
+
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.vb-admin-panel.orange {
+    border-top-color: #f39c12;
+}
+
+.vb-admin-panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    min-height: 43px;
+
+    padding: 0 14px;
+
+    border-bottom: 1px solid #eeeeee;
+}
+
+.vb-admin-panel-heading h3 {
+    margin: 0;
+
+    color: #444444;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.vb-admin-panel-body {
+    overflow-x: auto;
+}
+
+.vb-admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.vb-admin-table th,
+.vb-admin-table td {
+    padding: 11px 12px;
+
+    border-bottom: 1px solid #eeeeee;
+
+    color: #4b5563;
+
+    text-align: left;
+
+    font-size: 11px;
+}
+
+.vb-admin-table th {
+    color: #374151;
+    font-weight: 700;
+}
+
+.vb-admin-status {
+    display: inline-block;
+
+    padding: 4px 7px;
+
+    border-radius: 3px;
+
+    background: #f39c12;
+    color: #ffffff;
+
+    font-size: 9px;
+}
+
+.vb-admin-status.confirmed {
+    background: #3c8dbc;
+}
+
+.vb-admin-status.shipping {
+    background: #00c0ef;
+}
+
+.vb-admin-status.completed {
+    background: #00a65a;
+}
+
+.vb-admin-status.cancelled {
+    background: #dd4b39;
+}
+
+.vb-admin-detail-btn {
+    display: inline-block;
+
+    padding: 5px 8px;
+
+    border-radius: 3px;
+
+    background: #3c8dbc;
+    color: #ffffff;
+
+    text-decoration: none;
+    font-size: 9px;
+}
+
+.vb-admin-empty {
+    padding: 35px 20px;
+
+    color: #9ca3af;
+
+    text-align: center;
+    font-size: 12px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1000px) {
+    .vb-admin-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .vb-admin-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 700px) {
+    .vb-admin-sidebar {
+        display: none;
+    }
+
+    .vb-admin-main {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .vb-admin-header-user {
+        display: none;
+    }
+
+    .vb-admin-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================
+   ADMIN ORDERS
+========================================= */
+
+.vb-admin-alert {
+    margin-bottom: 16px;
+    padding: 11px 14px;
+
+    border-radius: 4px;
+
+    font-size: 12px;
+}
+
+.vb-admin-alert.success {
+    border: 1px solid #b7e4c7;
+    background: #ecfdf3;
+    color: #15803d;
+}
+
+.vb-admin-alert.error {
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.vb-admin-order-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+
+    margin-bottom: 18px;
+}
+
+.vb-admin-order-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.vb-admin-order-tabs button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 8px 11px;
+
+    border: 1px solid #d8dee6;
+    border-radius: 4px;
+
+    background: #ffffff;
+    color: #5f6b76;
+
+    font-size: 11px;
+
+    cursor: pointer;
+}
+
+.vb-admin-order-tabs button span {
+    min-width: 18px;
+    height: 18px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 5px;
+
+    border-radius: 999px;
+
+    background: #edf1f5;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.vb-admin-order-tabs button.active {
+    border-color: #3c8dbc;
+    background: #3c8dbc;
+    color: #ffffff;
+}
+
+.vb-admin-order-tabs button.active span {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.vb-admin-order-search {
+    width: 270px;
+    flex-shrink: 0;
+}
+
+.vb-admin-order-search input {
+    width: 100%;
+    height: 35px;
+
+    padding: 0 11px;
+
+    border: 1px solid #d8dee6;
+    border-radius: 4px;
+
+    outline: none;
+
+    font-size: 11px;
+}
+
+.vb-admin-order-search input:focus {
+    border-color: #3c8dbc;
+}
+
+.vb-admin-panel-count {
+    color: #8b97a3;
+    font-size: 10px;
+}
+
+.vb-admin-order-table-wrapper {
+    overflow-x: auto;
+}
+
+.vb-admin-order-table {
+    min-width: 900px;
+}
+
+.vb-admin-customer-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.vb-admin-customer-cell span {
+    color: #9aa5b1;
+    font-size: 9px;
+}
+
+.vb-admin-order-price {
+    display: block;
+
+    color: #15803d;
+
+    font-size: 11px;
+}
+
+.vb-admin-order-discount {
+    display: block;
+    margin-top: 3px;
+
+    color: #15803d;
+
+    font-size: 9px;
+}
+
+/* DETAIL */
+
+.vb-admin-order-detail-row>td {
+    padding: 0 !important;
+    background: #f7f9fb;
+}
+
+.vb-admin-order-detail {
+    padding: 20px;
+    border-left: 3px solid #3c8dbc;
+}
+
+.vb-admin-order-detail-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 15px;
+
+    padding-bottom: 18px;
+
+    border-bottom: 1px solid #e3e8ee;
+}
+
+.vb-admin-order-detail-grid>div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.vb-admin-order-detail-grid span {
+    color: #8b97a3;
+    font-size: 9px;
+    text-transform: uppercase;
+}
+
+.vb-admin-order-detail-grid strong {
+    color: #344050;
+    font-size: 11px;
+}
+
+.vb-admin-order-products {
+    margin-top: 18px;
+}
+
+.vb-admin-order-products h4 {
+    margin: 0 0 10px;
+
+    color: #444444;
+
+    font-size: 12px;
+}
+
+.vb-admin-order-products table {
+    width: 100%;
+    border-collapse: collapse;
+
+    background: #ffffff;
+}
+
+.vb-admin-order-products th,
+.vb-admin-order-products td {
+    padding: 9px 10px;
+
+    border: 1px solid #e5e8ec;
+
+    font-size: 10px;
+    text-align: left;
+}
+
+.vb-admin-order-products th {
+    background: #f5f6f7;
+}
+
+.vb-admin-order-summary {
+    width: 330px;
+
+    margin: 18px 0 0 auto;
+}
+
+.vb-admin-order-summary>div {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+
+    padding: 6px 0;
+
+    color: #65717c;
+
+    font-size: 10px;
+}
+
+.vb-admin-order-summary .total {
+    margin-top: 5px;
+    padding-top: 10px;
+
+    border-top: 1px solid #dce2e8;
+
+    color: #333333;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.vb-admin-order-summary .total strong {
+    color: #15803d;
+    font-size: 15px;
+}
+
+.vb-admin-order-discount-text {
+    color: #15803d;
+}
+
+.vb-admin-order-status-update {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    gap: 9px;
+
+    margin-top: 20px;
+    padding-top: 17px;
+
+    border-top: 1px solid #dce2e8;
+}
+
+.vb-admin-order-status-update>div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.vb-admin-order-status-update label {
+    color: #65717c;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.vb-admin-order-status-update select {
+    min-width: 165px;
+    height: 34px;
+
+    padding: 0 8px;
+
+    border: 1px solid #d8dee6;
+    border-radius: 3px;
+
+    background: #ffffff;
+
+    font-size: 10px;
+}
+
+.vb-admin-update-order-btn {
+    height: 34px;
+
+    padding: 0 14px;
+
+    border: 0;
+    border-radius: 3px;
+
+    background: #3c8dbc;
+    color: #ffffff;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.vb-admin-update-order-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.vb-admin-order-final-note {
+    margin: 10px 0 0;
+
+    color: #8b97a3;
+
+    text-align: right;
+    font-size: 9px;
+}
+
+@media (max-width: 900px) {
+    .vb-admin-order-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .vb-admin-order-search {
+        width: 100%;
+    }
+
+    .vb-admin-order-detail-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* =========================================
+   ADMIN ORDER - BULK UPDATE
+========================================= */
+
+.vb-admin-bulk-bar {
+    min-height: 54px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 14px;
+    padding: 9px 12px;
+
+    border: 1px solid #dbe2e8;
+
+    background: #ffffff;
+}
+
+.vb-admin-bulk-left,
+.vb-admin-bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.vb-admin-check-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    color: #475569;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.vb-admin-check-label input,
+.vb-admin-checkbox-column input {
+    width: 15px;
+    height: 15px;
+
+    accent-color: #3c8dbc;
+
+    cursor: pointer;
+}
+
+.vb-admin-selected-count {
+    padding-left: 10px;
+
+    border-left: 1px solid #e5e7eb;
+
+    color: #64748b;
+
+    font-size: 10px;
+}
+
+.vb-admin-selected-count strong {
+    color: #3c8dbc;
+}
+
+.vb-admin-bulk-actions select {
+    height: 34px;
+
+    min-width: 155px;
+
+    padding: 0 8px;
+
+    border: 1px solid #d8dee6;
+    border-radius: 3px;
+
+    background: #ffffff;
+
+    color: #475569;
+
+    font-size: 10px;
+}
+
+.vb-admin-bulk-update {
+    height: 34px;
+
+    padding: 0 14px;
+
+    border: 0;
+    border-radius: 3px;
+
+    background: #3c8dbc;
+    color: #ffffff;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.vb-admin-bulk-update:hover {
+    background: #337ba5;
+}
+
+.vb-admin-bulk-update:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.vb-admin-clear-selection {
+    height: 34px;
+
+    padding: 0 11px;
+
+    border: 1px solid #d8dee6;
+    border-radius: 3px;
+
+    background: #ffffff;
+    color: #64748b;
+
+    font-size: 10px;
+
+    cursor: pointer;
+}
+
+.vb-admin-checkbox-column {
+    width: 42px;
+    text-align: center !important;
+}
+
+.vb-admin-selected-row {
+    background: #f0f8fd;
+}
+
+/* INLINE STATUS */
+
+.vb-admin-inline-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    min-width: 185px;
+}
+
+.vb-admin-inline-status select {
+    width: 125px;
+    height: 30px;
+
+    padding: 0 5px;
+
+    border: 1px solid #d8dee6;
+    border-radius: 3px;
+
+    background: #ffffff;
+
+    color: #475569;
+
+    font-size: 9px;
+}
+
+.vb-admin-inline-status select:focus {
+    border-color: #3c8dbc;
+    outline: none;
+}
+
+.vb-admin-inline-status button {
+    height: 30px;
+
+    padding: 0 9px;
+
+    border: 0;
+    border-radius: 3px;
+
+    background: #00a65a;
+    color: #ffffff;
+
+    font-size: 9px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.vb-admin-inline-status button:disabled {
+    background: #a8b4bf;
+    cursor: not-allowed;
+}
+
+.vb-admin-locked-status {
+    color: #9ca3af;
+
+    font-size: 9px;
+    font-style: italic;
+}
+
+@media (max-width: 900px) {
+    .vb-admin-bulk-bar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .vb-admin-bulk-left,
+    .vb-admin-bulk-actions {
+        flex-wrap: wrap;
+    }
+}
+
+/* =========================================
+   ADMIN PRODUCTS
+========================================= */
+
+.vb-admin-product-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.vb-admin-add-product-btn {
+    min-width: 130px;
+    height: 36px;
+
+    padding: 0 14px;
+
+    border: 0;
+    border-radius: 4px;
+
+    background: #00a65a;
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.vb-admin-add-product-btn:hover {
+    background: #008d4c;
+}
+
+/* CREATE / EDIT FORM */
+
+.vb-admin-product-form-panel {
+    margin-bottom: 20px;
+
+    padding: 19px;
+
+    border-top: 3px solid #00a65a;
+
+    background: #ffffff;
+
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.vb-admin-product-form-title {
+    margin-bottom: 17px;
+    padding-bottom: 12px;
+
+    border-bottom: 1px solid #eeeeee;
+}
+
+.vb-admin-product-form-title h3,
+.vb-admin-product-modal-header h3 {
+    margin: 0;
+
+    color: #374151;
+
+    font-size: 15px;
+}
+
+.vb-admin-product-form-title p,
+.vb-admin-product-modal-header p {
+    margin: 4px 0 0;
+
+    color: #8994a0;
+
+    font-size: 10px;
+}
+
+.vb-admin-product-form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 15px 18px;
+}
+
+.vb-admin-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.vb-admin-form-group label {
+    color: #4b5563;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.vb-admin-form-group label span {
+    margin-left: 3px;
+
+    color: #dd4b39;
+}
+
+.vb-admin-form-group input,
+.vb-admin-form-group select,
+.vb-admin-form-group textarea {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 9px 10px;
+
+    border: 1px solid #d7dde3;
+    border-radius: 3px;
+
+    background: #ffffff;
+
+    color: #374151;
+
+    font-size: 11px;
+
+    outline: none;
+}
+
+.vb-admin-form-group input,
+.vb-admin-form-group select {
+    height: 37px;
+}
+
+.vb-admin-form-group textarea {
+    min-height: 95px;
+
+    resize: vertical;
+}
+
+.vb-admin-form-group input:focus,
+.vb-admin-form-group select:focus,
+.vb-admin-form-group textarea:focus {
+    border-color: #3c8dbc;
+}
+
+.vb-admin-form-full {
+    grid-column: 1 / -1;
+}
+
+.vb-admin-product-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+
+    margin-top: 18px;
+    padding-top: 15px;
+
+    border-top: 1px solid #eeeeee;
+}
+
+.vb-admin-primary-btn,
+.vb-admin-secondary-btn {
+    height: 35px;
+
+    padding: 0 14px;
+
+    border-radius: 3px;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.vb-admin-primary-btn {
+    border: 0;
+
+    background: #3c8dbc;
+    color: #ffffff;
+}
+
+.vb-admin-primary-btn:hover {
+    background: #337ba5;
+}
+
+.vb-admin-secondary-btn {
+    border: 1px solid #d7dde3;
+
+    background: #ffffff;
+    color: #5f6b76;
+}
+
+.vb-admin-primary-btn:disabled,
+.vb-admin-secondary-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* TOOLBAR */
+
+.vb-admin-product-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+
+    margin-bottom: 16px;
+}
+
+.vb-admin-product-search {
+    flex: 1;
+    max-width: 430px;
+}
+
+.vb-admin-product-search input {
+    width: 100%;
+    height: 37px;
+
+    box-sizing: border-box;
+
+    padding: 0 12px;
+
+    border: 1px solid #d7dde3;
+    border-radius: 4px;
+
+    background: #ffffff;
+
+    font-size: 11px;
+
+    outline: none;
+}
+
+.vb-admin-product-search input:focus {
+    border-color: #3c8dbc;
+}
+
+.vb-admin-product-filter {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.vb-admin-product-filter select {
+    height: 37px;
+
+    min-width: 175px;
+
+    padding: 0 9px;
+
+    border: 1px solid #d7dde3;
+    border-radius: 4px;
+
+    background: #ffffff;
+
+    color: #4b5563;
+
+    font-size: 10px;
+}
+
+.vb-admin-product-filter button {
+    height: 37px;
+
+    padding: 0 11px;
+
+    border: 1px solid #d7dde3;
+    border-radius: 4px;
+
+    background: #ffffff;
+    color: #64748b;
+
+    font-size: 10px;
+
+    cursor: pointer;
+}
+
+/* TABLE */
+
+.vb-admin-product-table-wrapper {
+    overflow-x: auto;
+}
+
+.vb-admin-product-table {
+    min-width: 930px;
+}
+
+.vb-admin-product-table td {
+    vertical-align: middle;
+}
+
+.vb-admin-product-image {
+    width: 55px;
+    height: 55px;
+
+    overflow: hidden;
+
+    border: 1px solid #e3e7eb;
+    border-radius: 4px;
+
+    background: #f7f8fa;
+}
+
+.vb-admin-product-image img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+}
+
+.vb-admin-product-no-image {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #a1aab5;
+
+    text-align: center;
+
+    font-size: 8px;
+}
+
+.vb-admin-product-name {
+    max-width: 250px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.vb-admin-product-name strong {
+    color: #344050;
+
+    font-size: 11px;
+}
+
+.vb-admin-product-name span {
+    color: #919ba6;
+
+    font-size: 9px;
+}
+
+.vb-admin-product-price {
+    color: #008d4c;
+
+    white-space: nowrap;
+}
+
+/* STOCK */
+
+.vb-admin-stock {
+    min-width: 31px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 4px 7px;
+
+    border-radius: 3px;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.vb-admin-stock.good {
+    background: #e8f7ef;
+    color: #008d4c;
+}
+
+.vb-admin-stock.low {
+    background: #fff4df;
+    color: #d98200;
+}
+
+.vb-admin-stock.out {
+    background: #fdebea;
+    color: #dd4b39;
+}
+
+/* STATUS */
+
+.vb-admin-product-status {
+    display: inline-block;
+
+    padding: 4px 7px;
+
+    border-radius: 3px;
+
+    background: #eef1f4;
+    color: #64748b;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.vb-admin-product-status.active {
+    background: #e8f7ef;
+    color: #008d4c;
+}
+
+.vb-admin-product-status.inactive {
+    background: #fdebea;
+    color: #dd4b39;
+}
+
+/* ACTIONS */
+
+.vb-admin-product-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    white-space: nowrap;
+}
+
+.vb-admin-product-actions button,
+.vb-admin-product-image-btn {
+    height: 29px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    padding: 0 8px;
+
+    border-radius: 3px;
+
+    font-size: 9px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.vb-admin-product-edit-btn {
+    border: 0;
+
+    background: #3c8dbc;
+    color: #ffffff;
+}
+
+.vb-admin-product-image-btn {
+    border: 1px solid #d7dde3;
+
+    background: #ffffff;
+    color: #536273;
+}
+
+.vb-admin-product-image-btn input {
+    display: none;
+}
+
+.vb-admin-product-image-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.vb-admin-product-delete-btn {
+    border: 0;
+
+    background: #dd4b39;
+    color: #ffffff;
+}
+
+.vb-admin-product-delete-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* EDIT MODAL */
+
+.vb-admin-product-modal-backdrop {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(15, 23, 42, 0.48);
+}
+
+.vb-admin-product-modal {
+    width: min(720px, 100%);
+
+    max-height: calc(100vh - 40px);
+
+    overflow-y: auto;
+
+    padding: 20px;
+
+    border-top: 3px solid #3c8dbc;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.vb-admin-product-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    margin-bottom: 17px;
+    padding-bottom: 13px;
+
+    border-bottom: 1px solid #eeeeee;
+}
+
+.vb-admin-product-modal-header>button {
+    width: 29px;
+    height: 29px;
+
+    border: 0;
+
+    background: transparent;
+    color: #7b8794;
+
+    font-size: 22px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+@media (max-width: 800px) {
+    .vb-admin-product-heading {
+        flex-direction: column;
+    }
+
+    .vb-admin-product-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .vb-admin-product-search {
+        max-width: none;
+    }
+
+    .vb-admin-product-filter {
+        flex-wrap: wrap;
+    }
+
+    .vb-admin-product-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .vb-admin-form-full {
+        grid-column: auto;
+    }
+}
+
+/* =========================================
+   ADMIN CATEGORIES
+========================================= */
+
+.vb-admin-category-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.vb-admin-add-category-btn {
+    min-width: 135px;
+    height: 36px;
+
+    padding: 0 14px;
+
+    border: 0;
+    border-radius: 4px;
+
+    background: #00a65a;
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.vb-admin-add-category-btn:hover {
+    background: #008d4c;
+}
+
+/* CREATE FORM */
+
+.vb-admin-category-form-panel {
+    margin-bottom: 20px;
+    padding: 19px;
+
+    border-top: 3px solid #00a65a;
+
+    background: #ffffff;
+
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.vb-admin-category-form-title {
+    margin-bottom: 17px;
+    padding-bottom: 12px;
+
+    border-bottom: 1px solid #eeeeee;
+}
+
+.vb-admin-category-form-title h3 {
+    margin: 0;
+
+    color: #374151;
+
+    font-size: 15px;
+}
+
+.vb-admin-category-form-title p {
+    margin: 4px 0 0;
+
+    color: #8994a0;
+
+    font-size: 10px;
+}
+
+.vb-admin-category-form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 15px 18px;
+}
+
+/* TOOLBAR */
+
+.vb-admin-category-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-bottom: 16px;
+}
+
+.vb-admin-category-search {
+    width: 100%;
+    max-width: 430px;
+}
+
+.vb-admin-category-search input {
+    width: 100%;
+    height: 37px;
+
+    box-sizing: border-box;
+
+    padding: 0 12px;
+
+    border: 1px solid #d7dde3;
+    border-radius: 4px;
+
+    background: #ffffff;
+
+    font-size: 11px;
+
+    outline: none;
+}
+
+.vb-admin-category-search input:focus {
+    border-color: #3c8dbc;
+}
+
+.vb-admin-category-clear {
+    height: 37px;
+
+    padding: 0 11px;
+
+    border: 1px solid #d7dde3;
+    border-radius: 4px;
+
+    background: #ffffff;
+    color: #64748b;
+
+    font-size: 10px;
+
+    cursor: pointer;
+}
+
+/* TABLE */
+
+.vb-admin-category-table-wrapper {
+    overflow-x: auto;
+}
+
+.vb-admin-category-table {
+    min-width: 760px;
+}
+
+.vb-admin-category-table td {
+    vertical-align: middle;
+}
+
+.vb-admin-category-name {
+    color: #344050;
+}
+
+.vb-admin-category-description {
+    max-width: 500px;
+
+    color: #64748b;
+
+    line-height: 1.55;
+}
+
+/* STATUS */
+
+.vb-admin-category-status {
+    display: inline-block;
+
+    padding: 4px 7px;
+
+    border-radius: 3px;
+
+    background: #eef1f4;
+    color: #64748b;
+
+    white-space: nowrap;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.vb-admin-category-status.active {
+    background: #e8f7ef;
+    color: #008d4c;
+}
+
+.vb-admin-category-status.inactive {
+    background: #fdebea;
+    color: #dd4b39;
+}
+
+/* ACTIONS */
+
+.vb-admin-category-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.vb-admin-category-actions button {
+    height: 29px;
+
+    padding: 0 9px;
+
+    border-radius: 3px;
+
+    font-size: 9px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.vb-admin-category-edit-btn {
+    border: 0;
+
+    background: #3c8dbc;
+    color: #ffffff;
+}
+
+.vb-admin-category-delete-btn {
+    border: 0;
+
+    background: #dd4b39;
+    color: #ffffff;
+}
+
+.vb-admin-category-delete-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* EDIT MODAL */
+
+.vb-admin-category-modal-backdrop {
+    position: fixed;
+    inset: 0;
+
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(15,
+            23,
+            42,
+            0.48);
+}
+
+.vb-admin-category-modal {
+    width: min(650px, 100%);
+
+    max-height: calc(100vh - 40px);
+
+    overflow-y: auto;
+
+    padding: 20px;
+
+    border-top: 3px solid #3c8dbc;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.vb-admin-category-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    margin-bottom: 17px;
+    padding-bottom: 13px;
+
+    border-bottom: 1px solid #eeeeee;
+}
+
+.vb-admin-category-modal-header h3 {
+    margin: 0;
+
+    color: #374151;
+
+    font-size: 15px;
+}
+
+.vb-admin-category-modal-header p {
+    margin: 4px 0 0;
+
+    color: #8994a0;
+
+    font-size: 10px;
+}
+
+.vb-admin-category-modal-header>button {
+    width: 29px;
+    height: 29px;
+
+    border: 0;
+
+    background: transparent;
+    color: #7b8794;
+
+    font-size: 22px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+@media (max-width: 800px) {
+    .vb-admin-category-heading {
+        flex-direction: column;
+    }
+
+    .vb-admin-category-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .vb-admin-category-search {
+        max-width: none;
+    }
+
+    .vb-admin-category-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================
+   ADMIN PROMOTIONS
+========================================= */
+
+.vb-admin-promotion-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.vb-admin-add-promotion-btn {
+    min-width: 145px;
+    height: 36px;
+
+    padding: 0 14px;
+
+    border: 0;
+    border-radius: 4px;
+
+    background: #00a65a;
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.vb-admin-add-promotion-btn:hover {
+    background: #008d4c;
+}
+
+/* STATS */
+
+.vb-admin-promotion-stats {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 15px;
+
+    margin-bottom: 18px;
+}
+
+.vb-admin-promotion-stats>div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 14px 16px;
+
+    border-left: 3px solid #3c8dbc;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.07);
+}
+
+.vb-admin-promotion-stats span {
+    color: #64748b;
+
+    font-size: 10px;
+}
+
+.vb-admin-promotion-stats strong {
+    color: #344050;
+
+    font-size: 20px;
+}
+
+/* FORM */
+
+.vb-admin-promotion-form-panel {
+    margin-bottom: 20px;
+    padding: 19px;
+
+    border-top: 3px solid #00a65a;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.vb-admin-promotion-form-title {
+    margin-bottom: 17px;
+    padding-bottom: 12px;
+
+    border-bottom: 1px solid #eeeeee;
+}
+
+.vb-admin-promotion-form-title h3 {
+    margin: 0;
+
+    color: #374151;
+
+    font-size: 15px;
+}
+
+.vb-admin-promotion-form-title p {
+    margin: 4px 0 0;
+
+    color: #8994a0;
+
+    font-size: 10px;
+}
+
+.vb-admin-promotion-form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 15px 18px;
+}
+
+.vb-admin-promotion-form-grid small {
+    margin-top: -2px;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+}
+
+/* TOOLBAR */
+
+.vb-admin-promotion-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 16px;
+}
+
+.vb-admin-promotion-search {
+    flex: 1;
+
+    max-width: 420px;
+}
+
+.vb-admin-promotion-search input {
+    width: 100%;
+    height: 37px;
+
+    box-sizing: border-box;
+
+    padding: 0 12px;
+
+    border: 1px solid #d7dde3;
+    border-radius: 4px;
+
+    background: #ffffff;
+
+    font-size: 11px;
+
+    outline: none;
+}
+
+.vb-admin-promotion-search input:focus {
+    border-color: #3c8dbc;
+}
+
+.vb-admin-promotion-filters {
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+}
+
+.vb-admin-promotion-filters select {
+    height: 37px;
+
+    min-width: 145px;
+
+    padding: 0 8px;
+
+    border: 1px solid #d7dde3;
+    border-radius: 4px;
+
+    background: #ffffff;
+    color: #475569;
+
+    font-size: 10px;
+}
+
+.vb-admin-promotion-filters button {
+    height: 37px;
+
+    padding: 0 10px;
+
+    border: 1px solid #d7dde3;
+    border-radius: 4px;
+
+    background: #ffffff;
+    color: #64748b;
+
+    font-size: 10px;
+
+    cursor: pointer;
+}
+
+/* TABLE */
+
+.vb-admin-promotion-table-wrapper {
+    overflow-x: auto;
+}
+
+.vb-admin-promotion-table {
+    min-width: 1200px;
+}
+
+.vb-admin-promotion-table td {
+    vertical-align: middle;
+}
+
+.vb-admin-promotion-code {
+    display: inline-block;
+
+    padding: 5px 7px;
+
+    border: 1px dashed #3c8dbc;
+    border-radius: 3px;
+
+    background: #eef8fd;
+    color: #2479a6;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.vb-admin-promotion-name {
+    max-width: 220px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.vb-admin-promotion-name strong {
+    color: #344050;
+}
+
+.vb-admin-promotion-name span {
+    overflow: hidden;
+
+    display: -webkit-box;
+
+    color: #8b97a3;
+
+    font-size: 9px;
+    line-height: 1.4;
+
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.vb-admin-promotion-type {
+    display: inline-block;
+
+    padding: 4px 7px;
+
+    border-radius: 3px;
+
+    background: #eef1f4;
+    color: #536273;
+
+    white-space: nowrap;
+
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.vb-admin-promotion-value {
+    color: #00a65a;
+
+    white-space: nowrap;
+}
+
+.vb-admin-promotion-dates {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+
+    min-width: 155px;
+
+    color: #64748b;
+
+    font-size: 9px;
+}
+
+/* STATUS */
+
+.vb-admin-promotion-status {
+    display: inline-block;
+
+    padding: 4px 7px;
+
+    border-radius: 3px;
+
+    white-space: nowrap;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.vb-admin-promotion-status.active {
+    background: #e8f7ef;
+    color: #008d4c;
+}
+
+.vb-admin-promotion-status.inactive {
+    background: #fdebea;
+    color: #dd4b39;
+}
+
+/* ACTIONS */
+
+.vb-admin-promotion-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 5px;
+}
+
+.vb-admin-promotion-actions button {
+    height: 29px;
+
+    padding: 0 9px;
+
+    border: 0;
+    border-radius: 3px;
+
+    font-size: 9px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.vb-admin-promotion-actions .edit {
+    background: #3c8dbc;
+    color: #ffffff;
+}
+
+.vb-admin-promotion-actions .delete {
+    background: #dd4b39;
+    color: #ffffff;
+}
+
+.vb-admin-promotion-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* MODAL */
+
+.vb-admin-promotion-modal-backdrop {
+    position: fixed;
+    inset: 0;
+
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background:
+        rgba(15, 23, 42, 0.48);
+}
+
+.vb-admin-promotion-modal {
+    width: min(760px,
+            100%);
+
+    max-height:
+        calc(100vh - 40px);
+
+    overflow-y: auto;
+
+    padding: 20px;
+
+    border-top:
+        3px solid #3c8dbc;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.vb-admin-promotion-modal-header {
+    display: flex;
+
+    align-items: flex-start;
+    justify-content: space-between;
+
+    margin-bottom: 17px;
+    padding-bottom: 13px;
+
+    border-bottom:
+        1px solid #eeeeee;
+}
+
+.vb-admin-promotion-modal-header h3 {
+    margin: 0;
+
+    color: #374151;
+
+    font-size: 15px;
+}
+
+.vb-admin-promotion-modal-header p {
+    margin: 4px 0 0;
+
+    color: #8994a0;
+
+    font-size: 10px;
+}
+
+.vb-admin-promotion-modal-header>button {
+    width: 29px;
+    height: 29px;
+
+    border: 0;
+
+    background: transparent;
+    color: #7b8794;
+
+    font-size: 22px;
+
+    cursor: pointer;
+}
+
+@media (max-width: 900px) {
+    .vb-admin-promotion-heading {
+        flex-direction: column;
+    }
+
+    .vb-admin-promotion-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .vb-admin-promotion-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .vb-admin-promotion-search {
+        max-width: none;
+    }
+
+    .vb-admin-promotion-filters {
+        flex-wrap: wrap;
+    }
+
+    .vb-admin-promotion-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================
+   ADMIN USERS
+========================================= */
+
+.vb-admin-current-account {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    margin-bottom: 15px;
+    padding: 10px 13px;
+
+    border-left: 3px solid #3c8dbc;
+
+    background: #ffffff;
+
+    color: #64748b;
+
+    font-size: 10px;
+}
+
+.vb-admin-current-account strong {
+    color: #344050;
+}
+
+.vb-admin-current-account span {
+    margin-left: auto;
+
+    color: #94a3b8;
+}
+
+/* STATS */
+
+.vb-admin-user-stats {
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+
+    gap: 12px;
+
+    margin-bottom: 18px;
+}
+
+.vb-admin-user-stats>div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 13px 14px;
+
+    border-left: 3px solid #3c8dbc;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.vb-admin-user-stats span {
+    color: #64748b;
+
+    font-size: 9px;
+}
+
+.vb-admin-user-stats strong {
+    color: #344050;
+
+    font-size: 19px;
+}
+
+/* TOOLBAR */
+
+.vb-admin-user-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 16px;
+}
+
+.vb-admin-user-search {
+    width: 100%;
+    max-width: 430px;
+}
+
+.vb-admin-user-search input {
+    width: 100%;
+    height: 37px;
+
+    box-sizing: border-box;
+
+    padding: 0 12px;
+
+    border: 1px solid #d7dde3;
+    border-radius: 4px;
+
+    background: #ffffff;
+
+    font-size: 11px;
+
+    outline: none;
+}
+
+.vb-admin-user-search input:focus {
+    border-color: #3c8dbc;
+}
+
+.vb-admin-user-filters {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.vb-admin-user-filters select {
+    height: 37px;
+
+    min-width: 145px;
+
+    padding: 0 8px;
+
+    border: 1px solid #d7dde3;
+    border-radius: 4px;
+
+    background: #ffffff;
+
+    color: #475569;
+
+    font-size: 10px;
+}
+
+.vb-admin-user-filters button {
+    height: 37px;
+
+    padding: 0 10px;
+
+    border: 1px solid #d7dde3;
+    border-radius: 4px;
+
+    background: #ffffff;
+    color: #64748b;
+
+    font-size: 10px;
+
+    cursor: pointer;
+}
+
+/* TABLE */
+
+.vb-admin-user-table-wrapper {
+    overflow-x: auto;
+}
+
+.vb-admin-user-table {
+    min-width: 1050px;
+}
+
+.vb-admin-user-table td {
+    vertical-align: middle;
+}
+
+.vb-admin-user-self-row {
+    background: #f0f8fd;
+}
+
+.vb-admin-user-account {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.vb-admin-user-account strong {
+    color: #344050;
+}
+
+.vb-admin-you-badge {
+    padding: 2px 5px;
+
+    border-radius: 3px;
+
+    background: #3c8dbc;
+    color: #ffffff;
+
+    font-size: 8px;
+    font-weight: 700;
+}
+
+.vb-admin-user-contact {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    color: #64748b;
+
+    font-size: 9px;
+}
+
+/* ROLE */
+
+.vb-admin-user-role {
+    display: inline-block;
+
+    padding: 4px 7px;
+
+    border-radius: 3px;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.vb-admin-user-role.admin {
+    background: #e8f2fb;
+    color: #2479a6;
+}
+
+.vb-admin-user-role.customer {
+    background: #f1f3f5;
+    color: #536273;
+}
+
+.vb-admin-user-role-select {
+    height: 30px;
+
+    min-width: 125px;
+
+    padding: 0 6px;
+
+    border: 1px solid #d7dde3;
+    border-radius: 3px;
+
+    background: #ffffff;
+
+    color: #475569;
+
+    font-size: 9px;
+}
+
+/* STATUS */
+
+.vb-admin-user-status {
+    display: inline-block;
+
+    padding: 4px 7px;
+
+    border-radius: 3px;
+
+    white-space: nowrap;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.vb-admin-user-status.active {
+    background: #e8f7ef;
+    color: #008d4c;
+}
+
+.vb-admin-user-status.inactive {
+    background: #fdebea;
+    color: #dd4b39;
+}
+
+/* ACTION */
+
+.vb-admin-lock-user-btn,
+.vb-admin-unlock-user-btn {
+    min-width: 72px;
+    height: 29px;
+
+    padding: 0 9px;
+
+    border: 0;
+    border-radius: 3px;
+
+    color: #ffffff;
+
+    font-size: 9px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.vb-admin-lock-user-btn {
+    background: #dd4b39;
+}
+
+.vb-admin-unlock-user-btn {
+    background: #00a65a;
+}
+
+.vb-admin-lock-user-btn:disabled,
+.vb-admin-unlock-user-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.vb-admin-self-protected {
+    color: #3c8dbc;
+
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.vb-admin-user-note {
+    margin-top: 14px;
+    padding: 11px 13px;
+
+    border: 1px solid #dce5ec;
+
+    background: #ffffff;
+
+    color: #64748b;
+
+    font-size: 10px;
+}
+
+.vb-admin-user-note code {
+    color: #dd4b39;
+}
+
+@media (max-width: 1000px) {
+    .vb-admin-user-stats {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .vb-admin-user-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .vb-admin-user-search {
+        max-width: none;
+    }
+
+    .vb-admin-user-filters {
+        flex-wrap: wrap;
+    }
+}
+
+/* =========================================
+   ADMIN REPORTS
+========================================= */
+
+.vb-report-filter-panel {
+    margin-bottom: 16px;
+}
+
+.vb-report-filter {
+    display: flex;
+    align-items: end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.vb-report-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.vb-report-filter-group label {
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.vb-report-filter-group input,
+.vb-report-filter-group select {
+    height: 36px;
+    min-width: 150px;
+
+    box-sizing: border-box;
+
+    padding: 0 9px;
+
+    border: 1px solid #d6dde4;
+    border-radius: 3px;
+
+    background: #ffffff;
+    color: #475569;
+
+    font-size: 10px;
+}
+
+.vb-report-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.vb-report-filter-btn,
+.vb-report-quick-btn {
+    height: 36px;
+
+    padding: 0 13px;
+
+    border-radius: 3px;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.vb-report-filter-btn {
+    border: 1px solid #367fa9;
+
+    background: #3c8dbc;
+    color: #ffffff;
+}
+
+.vb-report-quick-btn {
+    border: 1px solid #d6dde4;
+
+    background: #ffffff;
+    color: #475569;
+}
+
+.vb-report-filter-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* SUMMARY */
+
+.vb-report-summary {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 14px;
+
+    margin-bottom: 16px;
+}
+
+.vb-report-card {
+    min-height: 92px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 15px 18px;
+
+    box-sizing: border-box;
+
+    color: #ffffff;
+}
+
+.vb-report-card.orders {
+    background: #00c0ef;
+}
+
+.vb-report-card.customers {
+    background: #00a65a;
+}
+
+.vb-report-card.revenue {
+    background: #f39c12;
+}
+
+.vb-report-card>div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.vb-report-card span {
+    font-size: 10px;
+}
+
+.vb-report-card strong {
+    font-size: 23px;
+    font-weight: 700;
+}
+
+.vb-report-card small {
+    opacity: 0.85;
+    font-size: 8px;
+}
+
+.vb-report-card-icon {
+    font-size: 38px !important;
+    opacity: 0.3;
+}
+
+/* CHART */
+
+.vb-report-chart-large {
+    width: 100%;
+    height: 340px;
+}
+
+.vb-report-chart-medium {
+    width: 100%;
+    height: 300px;
+}
+
+.vb-report-two-columns {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 15px;
+}
+
+/* TABLE */
+
+.vb-report-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.vb-report-table {
+    min-width: 650px;
+}
+
+.vb-report-table td {
+    vertical-align: middle;
+}
+
+.vb-report-money {
+    color: #008d4c;
+
+    font-weight: 700;
+}
+
+.vb-report-payment-label {
+    display: inline-block;
+
+    padding: 4px 7px;
+
+    border-radius: 3px;
+
+    background: #edf2f7;
+    color: #475569;
+
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.vb-report-empty-cell {
+    padding: 20px !important;
+
+    text-align: center;
+
+    color: #94a3b8;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1000px) {
+    .vb-report-summary {
+        grid-template-columns:
+            1fr;
+    }
+
+    .vb-report-two-columns {
+        grid-template-columns:
+            1fr;
+    }
+}
+
+@media (max-width: 700px) {
+    .vb-report-filter {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .vb-report-filter-group input,
+    .vb-report-filter-group select {
+        width: 100%;
+    }
+
+    .vb-report-filter-actions {
+        flex-wrap: wrap;
+    }
+}

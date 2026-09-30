@@ -1,405 +1,822 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import axiosClient from "../api/axiosClient";
 
 function AdminCategoriesPage() {
-  const navigate = useNavigate();
+  const [categories, setCategories] =
+    useState([]);
 
-  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] =
+    useState(true);
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [message, setMessage] =
+    useState("");
 
-  const [editingCategory, setEditingCategory] =
-    useState(null);
+  const [error, setError] =
+    useState("");
 
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [keyword, setKeyword] =
+    useState("");
+
+  // ================================
+  // CREATE
+  // ================================
+  const [
+    showCreateForm,
+    setShowCreateForm,
+  ] = useState(false);
+
+  const [name, setName] =
+    useState("");
+
+  const [
+    description,
+    setDescription,
+  ] = useState("");
+
+  const [creating, setCreating] =
+    useState(false);
+
+  // ================================
+  // EDIT
+  // ================================
+  const [
+    editingCategory,
+    setEditingCategory,
+  ] = useState(null);
+
+  const [updating, setUpdating] =
+    useState(false);
+
+  const [
+    deletingId,
+    setDeletingId,
+  ] = useState(null);
 
   // ================================
   // LOAD CATEGORY
   // ================================
-  const loadCategories = async () => {
-    try {
-      const response = await axiosClient.get(
-        "/api/categories"
-      );
+  const loadCategories =
+    async () => {
+      try {
+        setError("");
 
-      setCategories(response.data);
+        const response =
+          await axiosClient.get(
+            "/api/categories"
+          );
 
-      console.log(
-        "LOAD CATEGORY THANH CONG:",
-        response.data
-      );
+        setCategories(
+          Array.isArray(
+            response.data
+          )
+            ? response.data
+            : []
+        );
+      } catch (err) {
+        console.error(
+          "LOAD CATEGORY THAT BAI:",
+          err
+        );
 
-    } catch (error) {
-      console.error(
-        "LOAD CATEGORY THAT BAI:",
-        error
-      );
-
-      setMessage(
-        "Khong the tai danh muc"
-      );
-
-    } finally {
-      setLoading(false);
-    }
-  };
+        setError(
+          err.response?.data
+            ?.message ||
+          "Không thể tải danh mục."
+        );
+      }
+    };
 
   useEffect(() => {
-    loadCategories();
+    const loadData =
+      async () => {
+        try {
+          setLoading(true);
+
+          await loadCategories();
+        } finally {
+          setLoading(false);
+        }
+      };
+
+    loadData();
   }, []);
 
   // ================================
-  // THEM CATEGORY
+  // FILTER
   // ================================
-  const handleCreate = async (e) => {
-    e.preventDefault();
+  const filteredCategories =
+    useMemo(() => {
+      const search =
+        keyword
+          .trim()
+          .toLowerCase();
 
-    try {
-      await axiosClient.post(
-        "/api/categories",
-        {
-          name,
-          description,
-        }
+      if (!search) {
+        return categories;
+      }
+
+      return categories.filter(
+        (category) =>
+          String(
+            category.id
+          ).includes(search) ||
+          String(
+            category.name || ""
+          )
+            .toLowerCase()
+            .includes(search) ||
+          String(
+            category.description ||
+            ""
+          )
+            .toLowerCase()
+            .includes(search)
       );
+    }, [categories, keyword]);
 
-      setMessage(
-        "Them danh muc thanh cong"
-      );
-
-      setName("");
-      setDescription("");
-
-      await loadCategories();
-
-    } catch (error) {
-      console.error(
-        "CREATE CATEGORY THAT BAI:",
-        error
-      );
-
-      setMessage(
-        error.response?.data?.message ||
-        "Khong the them danh muc"
-      );
-    }
+  // ================================
+  // RESET CREATE
+  // ================================
+  const resetCreateForm = () => {
+    setName("");
+    setDescription("");
   };
 
   // ================================
-  // CHON CATEGORY DE SUA
+  // CREATE CATEGORY
   // ================================
-  const handleEdit = (category) => {
+  const handleCreate =
+    async (e) => {
+      e.preventDefault();
+
+      const trimmedName =
+        name.trim();
+
+      if (!trimmedName) {
+        setError(
+          "Tên danh mục không được để trống."
+        );
+
+        return;
+      }
+
+      try {
+        setCreating(true);
+
+        setMessage("");
+        setError("");
+
+        await axiosClient.post(
+          "/api/categories",
+          {
+            name:
+              trimmedName,
+
+            description:
+              description.trim(),
+          }
+        );
+
+        setMessage(
+          "Thêm danh mục thành công."
+        );
+
+        resetCreateForm();
+
+        setShowCreateForm(false);
+
+        await loadCategories();
+      } catch (err) {
+        console.error(
+          "CREATE CATEGORY THAT BAI:",
+          err
+        );
+
+        setError(
+          err.response?.data
+            ?.message ||
+          "Không thể thêm danh mục."
+        );
+      } finally {
+        setCreating(false);
+      }
+    };
+
+  // ================================
+  // OPEN EDIT
+  // ================================
+  const handleEdit = (
+    category
+  ) => {
     setEditingCategory({
-      id: category.id,
-      name: category.name || "",
+      id:
+        category.id,
+
+      name:
+        category.name || "",
+
       description:
-        category.description || "",
+        category.description ||
+        "",
+
+      status:
+        category.status,
     });
 
     setMessage("");
+    setError("");
   };
 
   // ================================
-  // LUU CATEGORY
+  // EDIT FIELD
   // ================================
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    try {
-      await axiosClient.put(
-        `/api/categories/${editingCategory.id}`,
-        {
-          name: editingCategory.name,
-          description:
-            editingCategory.description,
-        }
-      );
-
-      setMessage(
-        `Cap nhat danh muc #${editingCategory.id} thanh cong`
-      );
-
-      setEditingCategory(null);
-
-      await loadCategories();
-
-    } catch (error) {
-      console.error(
-        "UPDATE CATEGORY THAT BAI:",
-        error
-      );
-
-      setMessage(
-        error.response?.data?.message ||
-        "Khong the cap nhat danh muc"
-      );
-    }
-  };
-
-  // ================================
-  // XOA CATEGORY
-  // ================================
-  const handleDelete = async (
-    category
+  const handleEditChange = (
+    field,
+    value
   ) => {
-    const confirmed = window.confirm(
-      `Ban co chac muon xoa danh muc "${category.name}"?`
+    setEditingCategory(
+      (current) => ({
+        ...current,
+
+        [field]: value,
+      })
     );
+  };
 
-    if (!confirmed) {
-      return;
+  // ================================
+  // UPDATE CATEGORY
+  // ================================
+  const handleUpdate =
+    async (e) => {
+      e.preventDefault();
+
+      if (!editingCategory) {
+        return;
+      }
+
+      const trimmedName =
+        editingCategory.name.trim();
+
+      if (!trimmedName) {
+        setError(
+          "Tên danh mục không được để trống."
+        );
+
+        return;
+      }
+
+      try {
+        setUpdating(true);
+
+        setMessage("");
+        setError("");
+
+        await axiosClient.put(
+          `/api/categories/${editingCategory.id}`,
+          {
+            name:
+              trimmedName,
+
+            description:
+              editingCategory.description.trim(),
+          }
+        );
+
+        setMessage(
+          `Cập nhật danh mục #${editingCategory.id} thành công.`
+        );
+
+        setEditingCategory(
+          null
+        );
+
+        await loadCategories();
+      } catch (err) {
+        console.error(
+          "UPDATE CATEGORY THAT BAI:",
+          err
+        );
+
+        setError(
+          err.response?.data
+            ?.message ||
+          "Không thể cập nhật danh mục."
+        );
+      } finally {
+        setUpdating(false);
+      }
+    };
+
+  // ================================
+  // DELETE CATEGORY
+  // ================================
+  const handleDelete =
+    async (category) => {
+      const confirmed =
+        window.confirm(
+          `Bạn có chắc muốn xóa danh mục "${category.name}"?`
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        setDeletingId(
+          category.id
+        );
+
+        setMessage("");
+        setError("");
+
+        await axiosClient.delete(
+          `/api/categories/${category.id}`
+        );
+
+        setMessage(
+          `Đã xóa danh mục #${category.id}.`
+        );
+
+        await loadCategories();
+      } catch (err) {
+        console.error(
+          "DELETE CATEGORY THAT BAI:",
+          err
+        );
+
+        setError(
+          err.response?.data
+            ?.message ||
+          "Không thể xóa danh mục. Danh mục có thể đang chứa sản phẩm."
+        );
+      } finally {
+        setDeletingId(null);
+      }
+    };
+
+  // ================================
+  // STATUS
+  // ================================
+  const getStatusLabel = (
+    status
+  ) => {
+    if (!status) {
+      return "—";
     }
 
-    try {
-      await axiosClient.delete(
-        `/api/categories/${category.id}`
-      );
+    const normalized =
+      String(
+        status
+      ).toUpperCase();
 
-      setMessage(
-        `Da xoa danh muc #${category.id}`
-      );
-
-      await loadCategories();
-
-    } catch (error) {
-      console.error(
-        "DELETE CATEGORY THAT BAI:",
-        error
-      );
-
-      setMessage(
-        error.response?.data?.message ||
-        "Khong the xoa danh muc"
-      );
+    if (
+      normalized === "ACTIVE"
+    ) {
+      return "Đang hoạt động";
     }
+
+    if (
+      normalized === "INACTIVE"
+    ) {
+      return "Ngừng hoạt động";
+    }
+
+    return status;
   };
 
   if (loading) {
     return (
-      <p>Dang tai danh muc...</p>
+      <div className="vb-admin-empty">
+        Đang tải danh mục...
+      </div>
     );
   }
 
   return (
     <div>
-      <h1>Quan ly danh muc</h1>
+      {/* =========================
+          HEADING
+      ========================= */}
+      <div className="vb-admin-category-heading">
+        <div className="vb-admin-page-heading">
+          <h2>
+            Quản trị danh mục
+          </h2>
 
-      <button
-        onClick={() =>
-          navigate("/admin")
-        }
-      >
-        Quay lai Admin
-      </button>
-
-      <br />
-      <br />
-
-      {message && (
-        <p>{message}</p>
-      )}
-
-      <hr />
-
-      {/* ======================== */}
-      {/* THEM CATEGORY */}
-      {/* ======================== */}
-
-      <h2>Them danh muc</h2>
-
-      <form onSubmit={handleCreate}>
-        <div>
-          <label>
-            Ten danh muc
-          </label>
-
-          <br />
-
-          <input
-            type="text"
-            value={name}
-            onChange={(e) =>
-              setName(e.target.value)
-            }
-            required
-          />
+          <p>
+            Quản lý các nhóm sản phẩm
+            của VuaBongDa.
+          </p>
         </div>
 
-        <br />
+        <button
+          type="button"
+          className="vb-admin-add-category-btn"
+          onClick={() => {
+            setShowCreateForm(
+              (current) =>
+                !current
+            );
 
-        <div>
-          <label>
-            Mo ta
-          </label>
+            setEditingCategory(
+              null
+            );
 
-          <br />
+            setMessage("");
+            setError("");
+          }}
+        >
+          {showCreateForm
+            ? "Đóng"
+            : "+ Thêm danh mục"}
+        </button>
+      </div>
 
-          <textarea
-            value={description}
+      {/* =========================
+          MESSAGE
+      ========================= */}
+      {message && (
+        <div className="vb-admin-alert success">
+          {message}
+        </div>
+      )}
+
+      {error && (
+        <div className="vb-admin-alert error">
+          {error}
+        </div>
+      )}
+
+      {/* =========================
+          CREATE FORM
+      ========================= */}
+      {showCreateForm && (
+        <section className="vb-admin-category-form-panel">
+          <div className="vb-admin-category-form-title">
+            <h3>
+              Thêm danh mục mới
+            </h3>
+
+            <p>
+              Nhập thông tin danh mục sản phẩm.
+            </p>
+          </div>
+
+          <form
+            onSubmit={
+              handleCreate
+            }
+          >
+            <div className="vb-admin-category-form-grid">
+              <div className="vb-admin-form-group">
+                <label>
+                  Tên danh mục
+                  <span>*</span>
+                </label>
+
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) =>
+                    setName(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Ví dụ: Giày bóng đá"
+                  required
+                />
+              </div>
+
+              <div className="vb-admin-form-group vb-admin-form-full">
+                <label>
+                  Mô tả
+                </label>
+
+                <textarea
+                  rows="4"
+                  value={
+                    description
+                  }
+                  onChange={(e) =>
+                    setDescription(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Mô tả ngắn về danh mục..."
+                />
+              </div>
+            </div>
+
+            <div className="vb-admin-product-form-actions">
+              <button
+                type="button"
+                className="vb-admin-secondary-btn"
+                onClick={() => {
+                  setShowCreateForm(
+                    false
+                  );
+
+                  resetCreateForm();
+                }}
+              >
+                Hủy
+              </button>
+
+              <button
+                type="submit"
+                className="vb-admin-primary-btn"
+                disabled={creating}
+              >
+                {creating
+                  ? "Đang thêm..."
+                  : "Thêm danh mục"}
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
+
+      {/* =========================
+          SEARCH
+      ========================= */}
+      <div className="vb-admin-category-toolbar">
+        <div className="vb-admin-category-search">
+          <input
+            type="text"
+            value={keyword}
             onChange={(e) =>
-              setDescription(
+              setKeyword(
                 e.target.value
               )
             }
+            placeholder="Tìm ID, tên danh mục, mô tả..."
           />
         </div>
 
-        <br />
-
-        <button type="submit">
-          Them danh muc
-        </button>
-      </form>
-
-      <hr />
-
-      {/* ======================== */}
-      {/* SUA CATEGORY */}
-      {/* ======================== */}
-
-      {editingCategory && (
-        <>
-          <h2>
-            Sua danh muc #
-            {editingCategory.id}
-          </h2>
-
-          <form
-            onSubmit={handleUpdate}
+        {keyword && (
+          <button
+            type="button"
+            className="vb-admin-category-clear"
+            onClick={() =>
+              setKeyword("")
+            }
           >
-            <div>
-              <label>
-                Ten danh muc
-              </label>
+            Xóa tìm kiếm
+          </button>
+        )}
+      </div>
 
-              <br />
+      {/* =========================
+          LIST
+      ========================= */}
+      <section className="vb-admin-panel">
+        <div className="vb-admin-panel-heading">
+          <h3>
+            DANH SÁCH DANH MỤC
+          </h3>
 
-              <input
-                type="text"
-                value={
-                  editingCategory.name
-                }
-                onChange={(e) =>
+          <span className="vb-admin-panel-count">
+            {filteredCategories.length} danh mục
+          </span>
+        </div>
+
+        <div className="vb-admin-panel-body">
+          {filteredCategories.length ===
+            0 ? (
+            <div className="vb-admin-empty">
+              Không tìm thấy danh mục phù hợp.
+            </div>
+          ) : (
+            <div className="vb-admin-category-table-wrapper">
+              <table className="vb-admin-table vb-admin-category-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>
+                      Tên danh mục
+                    </th>
+                    <th>
+                      Mô tả
+                    </th>
+                    <th>
+                      Trạng thái
+                    </th>
+                    <th>
+                      Thao tác
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {filteredCategories.map(
+                    (category) => (
+                      <tr
+                        key={
+                          category.id
+                        }
+                      >
+                        <td>
+                          <strong>
+                            #
+                            {
+                              category.id
+                            }
+                          </strong>
+                        </td>
+
+                        <td>
+                          <strong className="vb-admin-category-name">
+                            {
+                              category.name
+                            }
+                          </strong>
+                        </td>
+
+                        <td>
+                          <div className="vb-admin-category-description">
+                            {category.description ||
+                              "Chưa có mô tả"}
+                          </div>
+                        </td>
+
+                        <td>
+                          <span
+                            className={`vb-admin-category-status ${String(
+                              category.status ||
+                              ""
+                            ).toLowerCase()}`}
+                          >
+                            {getStatusLabel(
+                              category.status
+                            )}
+                          </span>
+                        </td>
+
+                        <td>
+                          <div className="vb-admin-category-actions">
+                            <button
+                              type="button"
+                              className="vb-admin-category-edit-btn"
+                              onClick={() =>
+                                handleEdit(
+                                  category
+                                )
+                              }
+                            >
+                              Sửa
+                            </button>
+
+                            <button
+                              type="button"
+                              className="vb-admin-category-delete-btn"
+                              disabled={
+                                deletingId ===
+                                category.id
+                              }
+                              onClick={() =>
+                                handleDelete(
+                                  category
+                                )
+                              }
+                            >
+                              {deletingId ===
+                                category.id
+                                ? "Đang xóa..."
+                                : "Xóa"}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* =========================
+          EDIT MODAL
+      ========================= */}
+      {editingCategory && (
+        <div
+          className="vb-admin-category-modal-backdrop"
+          onMouseDown={() =>
+            setEditingCategory(
+              null
+            )
+          }
+        >
+          <div
+            className="vb-admin-category-modal"
+            onMouseDown={(e) =>
+              e.stopPropagation()
+            }
+          >
+            <div className="vb-admin-category-modal-header">
+              <div>
+                <h3>
+                  Sửa danh mục #
+                  {
+                    editingCategory.id
+                  }
+                </h3>
+
+                <p>
+                  Cập nhật tên và mô tả danh mục.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
                   setEditingCategory(
-                    {
-                      ...editingCategory,
-                      name:
-                        e.target.value,
-                    }
+                    null
                   )
                 }
-                required
-              />
+              >
+                ×
+              </button>
             </div>
 
-            <br />
-
-            <div>
-              <label>
-                Mo ta
-              </label>
-
-              <br />
-
-              <textarea
-                value={
-                  editingCategory.description
-                }
-                onChange={(e) =>
-                  setEditingCategory(
-                    {
-                      ...editingCategory,
-                      description:
-                        e.target.value,
-                    }
-                  )
-                }
-              />
-            </div>
-
-            <br />
-
-            <button type="submit">
-              Luu thay doi
-            </button>
-
-            {" "}
-
-            <button
-              type="button"
-              onClick={() =>
-                setEditingCategory(null)
+            <form
+              onSubmit={
+                handleUpdate
               }
             >
-              Huy
-            </button>
-          </form>
+              <div className="vb-admin-category-form-grid">
+                <div className="vb-admin-form-group">
+                  <label>
+                    Tên danh mục
+                    <span>*</span>
+                  </label>
 
-          <hr />
-        </>
-      )}
+                  <input
+                    type="text"
+                    value={
+                      editingCategory.name
+                    }
+                    onChange={(e) =>
+                      handleEditChange(
+                        "name",
+                        e.target.value
+                      )
+                    }
+                    required
+                  />
+                </div>
 
-      {/* ======================== */}
-      {/* DANH SACH CATEGORY */}
-      {/* ======================== */}
+                <div className="vb-admin-form-group vb-admin-form-full">
+                  <label>
+                    Mô tả
+                  </label>
 
-      <h2>Danh sach danh muc</h2>
+                  <textarea
+                    rows="5"
+                    value={
+                      editingCategory.description
+                    }
+                    onChange={(e) =>
+                      handleEditChange(
+                        "description",
+                        e.target.value
+                      )
+                    }
+                  />
+                </div>
+              </div>
 
-      {categories.length === 0 ? (
-        <p>Chua co danh muc.</p>
-      ) : (
-        categories.map(
-          (category) => (
-            <div
-              key={category.id}
-              style={{
-                border:
-                  "1px solid #ccc",
-                padding: "15px",
-                marginBottom: "15px",
-              }}
-            >
-              <h3>
-                #{category.id}
-                {" - "}
-                {category.name}
-              </h3>
+              <div className="vb-admin-product-form-actions">
+                <button
+                  type="button"
+                  className="vb-admin-secondary-btn"
+                  onClick={() =>
+                    setEditingCategory(
+                      null
+                    )
+                  }
+                >
+                  Hủy
+                </button>
 
-              <p>
-                Mo ta:{" "}
-                {category.description}
-              </p>
-
-              <p>
-                Trang thai:{" "}
-                {category.status}
-              </p>
-
-              <button
-                onClick={() =>
-                  handleEdit(category)
-                }
-              >
-                Sua
-              </button>
-
-              {" "}
-
-              <button
-                onClick={() =>
-                  handleDelete(
-                    category
-                  )
-                }
-              >
-                Xoa
-              </button>
-            </div>
-          )
-        )
+                <button
+                  type="submit"
+                  className="vb-admin-primary-btn"
+                  disabled={updating}
+                >
+                  {updating
+                    ? "Đang lưu..."
+                    : "Lưu thay đổi"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

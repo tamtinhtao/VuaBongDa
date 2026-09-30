@@ -11,60 +11,53 @@ import java.util.List;
 @Data
 public class CreateOrderRequestDTO {
 
-    // ================================
-    // THONG TIN NHAN HANG
-    // ================================
-
     @NotBlank(
             message = "Ten nguoi nhan khong duoc de trong"
+    )
+    @Size(
+            max = 100,
+            message = "Ten nguoi nhan toi da 100 ky tu"
     )
     private String recipientName;
 
     @NotBlank(
             message = "So dien thoai khong duoc de trong"
     )
+    @Pattern(
+            regexp = "^(0\\d{9}|\\+84\\d{9})$",
+            message = "So dien thoai khong hop le"
+    )
     private String phone;
 
     @NotBlank(
             message = "Dia chi giao hang khong duoc de trong"
     )
+    @Size(
+            max = 500,
+            message = "Dia chi giao hang toi da 500 ky tu"
+    )
     private String shippingAddress;
-
-    // ================================
-    // PAYMENT
-    // ================================
 
     @NotBlank(
             message = "Phuong thuc thanh toan khong duoc de trong"
     )
     @Pattern(
-            regexp = "COD|BANK_TRANSFER",
+            regexp = "^(COD|BANK_TRANSFER)$",
             message = "Phuong thuc thanh toan chi chap nhan COD hoac BANK_TRANSFER"
     )
     private String paymentMethod;
 
-    // ================================
-    // MODE
     // CART / BUY_NOW
-    // ================================
-
     @Pattern(
-            regexp = "CART|BUY_NOW",
+            regexp = "^(CART|BUY_NOW)$",
             message = "Che do dat hang chi chap nhan CART hoac BUY_NOW"
     )
     private String mode = "CART";
 
-    // ================================
     // CART MODE
-    // CAC CART ITEM DUOC CHON
-    // ================================
-
     private List<Long> cartItemIds;
 
-    // ================================
     // BUY NOW MODE
-    // ================================
-
     private Long productId;
 
     @Min(
@@ -78,4 +71,11 @@ public class CreateOrderRequestDTO {
             message = "Size khong hop le"
     )
     private String size;
+
+    // PROMOTION
+    @Size(
+            max = 50,
+            message = "Ma khuyen mai khong hop le"
+    )
+    private String promotionCode;
 }

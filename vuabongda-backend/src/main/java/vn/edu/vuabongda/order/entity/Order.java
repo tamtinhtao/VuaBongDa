@@ -20,6 +20,9 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // ================================
+    // USER
+    // ================================
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "user_id",
@@ -27,6 +30,9 @@ public class Order {
     )
     private User user;
 
+    // ================================
+    // THONG TIN NHAN HANG
+    // ================================
     @Column(
             name = "recipient_name",
             nullable = false,
@@ -47,6 +53,38 @@ public class Order {
     )
     private String shippingAddress;
 
+    // ================================
+    // TONG TIEN TRUOC KHUYEN MAI
+    // ================================
+    @Column(
+            name = "original_amount",
+            precision = 15,
+            scale = 2
+    )
+    private BigDecimal originalAmount;
+
+    // ================================
+    // SO TIEN DUOC GIAM
+    // ================================
+    @Column(
+            name = "discount_amount",
+            precision = 15,
+            scale = 2
+    )
+    private BigDecimal discountAmount;
+
+    // ================================
+    // MA KHUYEN MAI DA SU DUNG
+    // ================================
+    @Column(
+            name = "promotion_code",
+            length = 50
+    )
+    private String promotionCode;
+
+    // ================================
+    // TONG TIEN CUOI CUNG
+    // ================================
     @Column(
             name = "total_amount",
             nullable = false,
@@ -55,12 +93,18 @@ public class Order {
     )
     private BigDecimal totalAmount;
 
+    // ================================
+    // TRANG THAI DON
+    // ================================
     @Column(
             nullable = false,
             length = 30
     )
     private String status = "PENDING";
 
+    // ================================
+    // THOI GIAN
+    // ================================
     @Column(
             name = "created_at",
             nullable = false
@@ -73,10 +117,14 @@ public class Order {
     )
     private LocalDateTime updatedAt;
 
+    // ================================
+    // BEFORE INSERT
+    // ================================
     @PrePersist
     public void prePersist() {
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now =
+                LocalDateTime.now();
 
         if (createdAt == null) {
             createdAt = now;
@@ -84,13 +132,45 @@ public class Order {
 
         updatedAt = now;
 
-        if (status == null) {
+        if (status == null
+                || status.isBlank()) {
+
             status = "PENDING";
+        }
+
+        /*
+         * Don khong dung promotion:
+         *
+         * originalAmount = totalAmount
+         * discountAmount = 0
+         */
+        if (originalAmount == null
+                && totalAmount != null) {
+
+            originalAmount =
+                    totalAmount;
+        }
+
+        if (discountAmount == null) {
+
+            discountAmount =
+                    BigDecimal.ZERO;
+        }
+
+        if (promotionCode != null
+                && promotionCode.isBlank()) {
+
+            promotionCode = null;
         }
     }
 
+    // ================================
+    // BEFORE UPDATE
+    // ================================
     @PreUpdate
     public void preUpdate() {
-        updatedAt = LocalDateTime.now();
+
+        updatedAt =
+                LocalDateTime.now();
     }
 }

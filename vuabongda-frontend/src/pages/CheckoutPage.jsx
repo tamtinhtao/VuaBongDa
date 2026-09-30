@@ -34,6 +34,37 @@ function CheckoutPage() {
     setPaymentMethod,
   ] = useState("COD");
 
+  // ================================
+  // PROMOTION
+  // ================================
+  const [
+    promotionCode,
+    setPromotionCode,
+  ] = useState("");
+
+  const [
+    appliedPromotion,
+    setAppliedPromotion,
+  ] = useState(null);
+
+  const [
+    applyingPromotion,
+    setApplyingPromotion,
+  ] = useState(false);
+
+  const [
+    promotionMessage,
+    setPromotionMessage,
+  ] = useState("");
+
+  const [
+    promotionError,
+    setPromotionError,
+  ] = useState("");
+
+  // ================================
+  // GENERAL
+  // ================================
   const [loading, setLoading] =
     useState(true);
 
@@ -64,9 +95,11 @@ function CheckoutPage() {
         setMessage("");
 
         // ================================
-        // BUY NOW MODE
+        // BUY NOW
         // ================================
-        if (checkoutMode === "buy-now") {
+        if (
+          checkoutMode === "buy-now"
+        ) {
           const rawData =
             sessionStorage.getItem(
               "vb_buy_now"
@@ -100,27 +133,40 @@ function CheckoutPage() {
           const product =
             response.data;
 
+          const quantity =
+            Number(data.quantity);
+
           const item = {
-            productId: product.id,
+            productId:
+              product.id,
+
             productName:
               product.name,
+
             imageUrl:
               product.imageUrl,
-            size: data.size || null,
-            quantity:
-              Number(data.quantity),
+
+            size:
+              data.size || null,
+
+            quantity,
+
             price:
               Number(product.price),
+
             subtotal:
               Number(product.price) *
-              Number(data.quantity),
+              quantity,
           };
 
           setBuyNowData({
-            productId: product.id,
-            quantity:
-              Number(data.quantity),
-            size: data.size || null,
+            productId:
+              product.id,
+
+            quantity,
+
+            size:
+              data.size || null,
           });
 
           setCheckoutItems([
@@ -131,7 +177,7 @@ function CheckoutPage() {
         }
 
         // ================================
-        // CART MODE
+        // CART
         // ================================
         const rawIds =
           sessionStorage.getItem(
@@ -149,7 +195,9 @@ function CheckoutPage() {
           JSON.parse(rawIds);
 
         if (
-          !Array.isArray(selectedIds) ||
+          !Array.isArray(
+            selectedIds
+          ) ||
           selectedIds.length === 0
         ) {
           setMessage(
@@ -167,17 +215,19 @@ function CheckoutPage() {
           response.data.items || [];
 
         const selectedItems =
-          cartItems.filter((item) =>
-            selectedIds.includes(
-              item.id
-            )
+          cartItems.filter(
+            (item) =>
+              selectedIds.includes(
+                item.id
+              )
           );
 
         if (
-          selectedItems.length === 0
+          selectedItems.length !==
+          selectedIds.length
         ) {
           setMessage(
-            "Không tìm thấy sản phẩm đã chọn trong giỏ hàng."
+            "Một số sản phẩm đã chọn không còn trong giỏ hàng. Vui lòng quay lại giỏ hàng."
           );
           return;
         }
@@ -205,388 +255,717 @@ function CheckoutPage() {
   }, [checkoutMode]);
 
   // ================================
-  // TOTAL
+  // ORIGINAL AMOUNT
   // ================================
-  const totalAmount = useMemo(
-    () =>
-      checkoutItems.reduce(
-        (total, item) =>
-          total +
-          Number(
-            item.subtotal || 0
-          ),
-        0
-      ),
-    [checkoutItems]
-  );
+  const originalAmount =
+    useMemo(
+      () =>
+        checkoutItems.reduce(
+          (total, item) =>
+            total +
+            Number(
+              item.subtotal || 0
+            ),
+          0
+        ),
+      [checkoutItems]
+    );
 
   // ================================
-  // CHECKOUT
+  // DISCOUNT
   // ================================
-  const handleCheckout = async (e) => {
-    e.preventDefault();
+  const discountAmount =
+    appliedPromotion
+      ? Number(
+        appliedPromotion
+          .discountAmount || 0
+      )
+      : 0;
 
-    if (
-      checkoutItems.length === 0
-    ) {
-      setMessage(
-        "Không có sản phẩm để thanh toán."
-      );
-      return;
-    }
+  // ================================
+  // FINAL AMOUNT
+  // ================================
+  const finalAmount =
+    appliedPromotion
+      ? Number(
+        appliedPromotion
+          .finalAmount ||
+        originalAmount
+      )
+      : originalAmount;
 
-    try {
-      setSubmitting(true);
-      setMessage("");
+  // ================================
+  // APPLY PROMOTION
+  // ================================
+  const handleApplyPromotion =
+    async () => {
+      const code =
+        promotionCode
+          .trim()
+          .toUpperCase();
 
-      // ================================
-      // REQUEST CHUNG
-      // ================================
-      const requestData = {
-        recipientName,
-        phone,
-        shippingAddress,
-        paymentMethod,
-      };
+      if (!code) {
+        setPromotionError(
+          "Vui lòng nhập mã khuyến mãi."
+        );
 
-      // ================================
-      // BUY NOW
-      // ================================
-      if (
-        checkoutMode === "buy-now"
-      ) {
-        if (!buyNowData) {
-          setMessage(
-            "Thông tin mua ngay không hợp lệ."
+        setPromotionMessage("");
+        setAppliedPromotion(null);
+
+        return;
+      }
+
+      if (originalAmount <= 0) {
+        setPromotionError(
+          "Đơn hàng không hợp lệ."
+        );
+
+        return;
+      }
+
+      try {
+        setApplyingPromotion(
+          true
+        );
+
+        setPromotionError("");
+        setPromotionMessage("");
+
+        const response =
+          await axiosClient.post(
+            "/api/promotions/apply",
+            {
+              code,
+              originalAmount,
+            }
           );
-          return;
+
+        setAppliedPromotion(
+          response.data
+        );
+
+        setPromotionCode(
+          response.data.code
+        );
+
+        setPromotionMessage(
+          `Áp dụng mã ${response.data.code} thành công.`
+        );
+      } catch (error) {
+        console.error(
+          "APPLY PROMOTION THAT BAI:",
+          error
+        );
+
+        setAppliedPromotion(null);
+
+        setPromotionMessage("");
+
+        setPromotionError(
+          error.response?.data
+            ?.message ||
+          error.response?.data
+            ?.error ||
+          "Mã khuyến mãi không hợp lệ hoặc không thể áp dụng."
+        );
+      } finally {
+        setApplyingPromotion(
+          false
+        );
+      }
+    };
+
+  // ================================
+  // REMOVE PROMOTION
+  // ================================
+  const handleRemovePromotion =
+    () => {
+      setAppliedPromotion(null);
+
+      setPromotionCode("");
+
+      setPromotionMessage("");
+
+      setPromotionError("");
+    };
+
+  // ================================
+  // PROMOTION INPUT
+  // ================================
+  const handlePromotionCodeChange =
+    (e) => {
+      const value =
+        e.target.value.toUpperCase();
+
+      setPromotionCode(value);
+
+      /*
+       * Neu sua code sau khi da apply,
+       * huy ket qua cu.
+       */
+      if (
+        appliedPromotion &&
+        value.trim() !==
+        appliedPromotion.code
+      ) {
+        setAppliedPromotion(
+          null
+        );
+
+        setPromotionMessage(
+          ""
+        );
+      }
+
+      setPromotionError("");
+    };
+
+  // ================================
+  // SUBMIT ORDER
+  // ================================
+  const handleCheckout =
+    async (e) => {
+      e.preventDefault();
+
+      if (
+        checkoutItems.length ===
+        0
+      ) {
+        setMessage(
+          "Không có sản phẩm để thanh toán."
+        );
+
+        return;
+      }
+
+      try {
+        setSubmitting(true);
+
+        setMessage("");
+
+        const requestData = {
+          recipientName,
+          phone,
+          shippingAddress,
+          paymentMethod,
+
+          promotionCode:
+            appliedPromotion
+              ? appliedPromotion.code
+              : null,
+        };
+
+        // ================================
+        // BUY NOW
+        // ================================
+        if (
+          checkoutMode ===
+          "buy-now"
+        ) {
+          if (!buyNowData) {
+            setMessage(
+              "Thông tin mua ngay không hợp lệ."
+            );
+
+            return;
+          }
+
+          requestData.mode =
+            "BUY_NOW";
+
+          requestData.productId =
+            buyNowData.productId;
+
+          requestData.quantity =
+            buyNowData.quantity;
+
+          requestData.size =
+            buyNowData.size;
+        } else {
+          // ================================
+          // CART
+          // ================================
+          const rawIds =
+            sessionStorage.getItem(
+              "vb_checkout_cart_items"
+            );
+
+          const selectedIds =
+            rawIds
+              ? JSON.parse(
+                rawIds
+              )
+              : [];
+
+          if (
+            selectedIds.length ===
+            0
+          ) {
+            setMessage(
+              "Bạn chưa chọn sản phẩm để thanh toán."
+            );
+
+            return;
+          }
+
+          requestData.mode =
+            "CART";
+
+          requestData.cartItemIds =
+            selectedIds;
         }
 
-        requestData.mode =
-          "BUY_NOW";
+        /*
+         * Backend se tu:
+         *
+         * - tinh originalAmount
+         * - validate promotion
+         * - tinh discountAmount
+         * - tinh totalAmount
+         *
+         * Frontend KHONG gui cac so tien nay.
+         */
+        const response =
+          await axiosClient.post(
+            "/api/orders",
+            requestData
+          );
 
-        requestData.productId =
-          buyNowData.productId;
+        const orderId =
+          response.data.id;
 
-        requestData.quantity =
-          buyNowData.quantity;
-
-        requestData.size =
-          buyNowData.size;
-      } else {
         // ================================
-        // CART
+        // CLEAR TEMP
         // ================================
-        const rawIds =
-          sessionStorage.getItem(
+        if (
+          checkoutMode ===
+          "buy-now"
+        ) {
+          sessionStorage.removeItem(
+            "vb_buy_now"
+          );
+        } else {
+          sessionStorage.removeItem(
             "vb_checkout_cart_items"
           );
 
-        const selectedIds =
-          rawIds
-            ? JSON.parse(rawIds)
-            : [];
-
-        if (
-          selectedIds.length === 0
-        ) {
-          setMessage(
-            "Bạn chưa chọn sản phẩm để thanh toán."
+          window.dispatchEvent(
+            new Event(
+              "cart-updated"
+            )
           );
-          return;
         }
 
-        requestData.mode =
-          "CART";
+        navigate(
+          `/order-success/${orderId}`
+        );
+      } catch (error) {
+        console.error(
+          "DAT HANG THAT BAI:",
+          error
+        );
 
-        requestData.cartItemIds =
-          selectedIds;
+        setMessage(
+          error.response?.data
+            ?.message ||
+          error.response?.data
+            ?.error ||
+          "Đặt hàng thất bại."
+        );
+      } finally {
+        setSubmitting(false);
       }
-
-      const response =
-        await axiosClient.post(
-          "/api/orders",
-          requestData
-        );
-
-      const orderId =
-        response.data.id;
-
-      // ================================
-      // CLEAR TEMP DATA
-      // ================================
-      if (
-        checkoutMode === "buy-now"
-      ) {
-        sessionStorage.removeItem(
-          "vb_buy_now"
-        );
-      } else {
-        sessionStorage.removeItem(
-          "vb_checkout_cart_items"
-        );
-
-        // Sau khi dat hang tu cart
-        // Navbar se cap nhat badge
-        window.dispatchEvent(
-          new Event(
-            "cart-updated"
-          )
-        );
-      }
-
-      navigate(
-        `/order-success/${orderId}`
-      );
-    } catch (error) {
-      console.error(
-        "DAT HANG THAT BAI:",
-        error
-      );
-
-      setMessage(
-        error.response?.data
-          ?.message ||
-        "Đặt hàng thất bại."
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    };
 
   // ================================
   // LOADING
   // ================================
   if (loading) {
     return (
-      <p>
+      <div className="checkout-message">
         Đang tải trang thanh toán...
-      </p>
+      </div>
     );
   }
 
   return (
-    <div>
-      <h1>Thanh toán</h1>
+    <main className="checkout-page">
+      <div className="checkout-container">
 
-      <button
-        type="button"
-        onClick={() => {
-          if (
-            checkoutMode ===
-            "buy-now"
-          ) {
-            navigate(-1);
-          } else {
-            navigate("/cart");
-          }
-        }}
-      >
-        Quay lại
-      </button>
+        {/* HEADER */}
+        <div className="checkout-header">
+          <div>
+            <p className="checkout-eyebrow">
+              VUABONGDA STORE
+            </p>
 
-      <hr />
+            <h1>
+              Thanh toán
+            </h1>
 
-      {message && (
-        <p
-          style={{
-            color: "red",
-          }}
-        >
-          {message}
-        </p>
-      )}
+            <p>
+              Kiểm tra sản phẩm và
+              thông tin nhận hàng.
+            </p>
+          </div>
 
-      {checkoutItems.length >
-        0 && (
-          <>
-            <h2>
-              Đơn hàng
-            </h2>
+          <button
+            type="button"
+            className="checkout-back"
+            onClick={() => {
+              if (
+                checkoutMode ===
+                "buy-now"
+              ) {
+                navigate(-1);
+              } else {
+                navigate(
+                  "/cart"
+                );
+              }
+            }}
+          >
+            ← Quay lại
+          </button>
+        </div>
 
-            {checkoutItems.map(
-              (item, index) => (
-                <div
-                  key={
-                    item.id ||
-                    `${item.productId}-${item.size}-${index}`
-                  }
-                >
-                  <p>
-                    <strong>
-                      {
-                        item.productName
-                      }
-                    </strong>
+        {message && (
+          <div className="checkout-error">
+            {message}
+          </div>
+        )}
 
-                    {" x "}
+        {checkoutItems.length >
+          0 && (
+            <div className="checkout-layout">
 
-                    {
-                      item.quantity
-                    }
-                  </p>
+              {/* LEFT */}
+              <section className="checkout-main">
 
-                  {item.size && (
-                    <p>
-                      Size:{" "}
-                      <strong>
-                        {
-                          item.size
+                {/* PRODUCTS */}
+                <div className="checkout-box">
+                  <h2>
+                    Sản phẩm
+                  </h2>
+
+                  {checkoutItems.map(
+                    (
+                      item,
+                      index
+                    ) => (
+                      <div
+                        className="checkout-product"
+                        key={
+                          item.id ||
+                          `${item.productId}-${item.size}-${index}`
                         }
-                      </strong>
+                      >
+                        <div>
+                          <strong>
+                            {
+                              item.productName
+                            }
+                          </strong>
+
+                          {item.size && (
+                            <p>
+                              Size:{" "}
+                              {
+                                item.size
+                              }
+                            </p>
+                          )}
+
+                          <p>
+                            Số lượng:{" "}
+                            {
+                              item.quantity
+                            }
+                          </p>
+                        </div>
+
+                        <div className="checkout-product-price">
+                          <span>
+                            {formatPrice(
+                              item.price
+                            )}
+                          </span>
+
+                          <strong>
+                            {formatPrice(
+                              item.subtotal
+                            )}
+                          </strong>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+
+                {/* SHIPPING FORM */}
+                <form
+                  id="checkout-form"
+                  onSubmit={
+                    handleCheckout
+                  }
+                  className="checkout-box checkout-form"
+                >
+                  <h2>
+                    Thông tin nhận hàng
+                  </h2>
+
+                  <label>
+                    Tên người nhận
+                  </label>
+
+                  <input
+                    type="text"
+                    value={
+                      recipientName
+                    }
+                    onChange={(e) =>
+                      setRecipientName(
+                        e.target.value
+                      )
+                    }
+                    placeholder="Nhập tên người nhận"
+                    required
+                  />
+
+                  <label>
+                    Số điện thoại
+                  </label>
+
+                  <input
+                    type="text"
+                    value={phone}
+                    onChange={(e) =>
+                      setPhone(
+                        e.target.value
+                      )
+                    }
+                    placeholder="Nhập số điện thoại"
+                    required
+                  />
+
+                  <label>
+                    Địa chỉ giao hàng
+                  </label>
+
+                  <textarea
+                    value={
+                      shippingAddress
+                    }
+                    onChange={(e) =>
+                      setShippingAddress(
+                        e.target.value
+                      )
+                    }
+                    placeholder="Nhập địa chỉ nhận hàng"
+                    rows="4"
+                    required
+                  />
+
+                  <label>
+                    Phương thức thanh toán
+                  </label>
+
+                  <select
+                    value={
+                      paymentMethod
+                    }
+                    onChange={(e) =>
+                      setPaymentMethod(
+                        e.target.value
+                      )
+                    }
+                  >
+                    <option value="COD">
+                      Thanh toán khi nhận
+                      hàng (COD)
+                    </option>
+
+                    <option value="BANK_TRANSFER">
+                      Chuyển khoản ngân hàng
+                    </option>
+                  </select>
+                </form>
+              </section>
+
+              {/* RIGHT */}
+              <aside className="checkout-summary">
+
+                <h2>
+                  Tóm tắt đơn hàng
+                </h2>
+
+                {/* PROMOTION */}
+                <div className="promotion-area">
+                  <label>
+                    Mã khuyến mãi
+                  </label>
+
+                  <div className="promotion-input-row">
+                    <input
+                      type="text"
+                      value={
+                        promotionCode
+                      }
+                      onChange={
+                        handlePromotionCodeChange
+                      }
+                      placeholder="VD: WELCOME10"
+                      disabled={
+                        applyingPromotion
+                      }
+                    />
+
+                    {!appliedPromotion ? (
+                      <button
+                        type="button"
+                        onClick={
+                          handleApplyPromotion
+                        }
+                        disabled={
+                          applyingPromotion
+                        }
+                      >
+                        {applyingPromotion
+                          ? "Đang kiểm tra..."
+                          : "Áp dụng"}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="promotion-remove"
+                        onClick={
+                          handleRemovePromotion
+                        }
+                      >
+                        Bỏ mã
+                      </button>
+                    )}
+                  </div>
+
+                  {promotionMessage && (
+                    <p className="promotion-success">
+                      {
+                        promotionMessage
+                      }
                     </p>
                   )}
 
-                  <p>
-                    Giá:{" "}
-                    {formatPrice(
-                      item.price
-                    )}
-                  </p>
+                  {promotionError && (
+                    <p className="promotion-error">
+                      {
+                        promotionError
+                      }
+                    </p>
+                  )}
 
-                  <p>
-                    Thành tiền:{" "}
-                    <strong>
-                      {formatPrice(
-                        item.subtotal
-                      )}
-                    </strong>
-                  </p>
+                  {appliedPromotion && (
+                    <div className="promotion-info">
+                      <strong>
+                        {
+                          appliedPromotion.name
+                        }
+                      </strong>
 
-                  <hr />
+                      <span>
+                        {appliedPromotion.discountType ===
+                          "PERCENT"
+                          ? `Giảm ${Number(
+                            appliedPromotion.discountValue
+                          )}%`
+                          : `Giảm ${formatPrice(
+                            appliedPromotion.discountValue
+                          )}`}
+                      </span>
+                    </div>
+                  )}
                 </div>
-              )
-            )}
 
-            <h3>
-              Tổng thanh toán:{" "}
-              {formatPrice(
-                totalAmount
-              )}
-            </h3>
+                {/* TOTALS */}
+                <div className="checkout-summary-row">
+                  <span>
+                    Tạm tính
+                  </span>
 
-            <hr />
+                  <strong>
+                    {formatPrice(
+                      originalAmount
+                    )}
+                  </strong>
+                </div>
 
-            <form
-              onSubmit={
-                handleCheckout
-              }
-            >
-              {/* RECIPIENT */}
-              <div>
-                <label>
-                  Tên người nhận
-                </label>
+                <div className="checkout-summary-row">
+                  <span>
+                    Khuyến mãi
+                  </span>
 
-                <br />
+                  <strong
+                    className={
+                      discountAmount >
+                        0
+                        ? "discount-value"
+                        : ""
+                    }
+                  >
+                    {discountAmount >
+                      0
+                      ? `- ${formatPrice(
+                        discountAmount
+                      )}`
+                      : "0 đ"}
+                  </strong>
+                </div>
 
-                <input
-                  type="text"
-                  value={
-                    recipientName
-                  }
-                  onChange={(e) =>
-                    setRecipientName(
-                      e.target.value
-                    )
-                  }
-                  required
-                />
-              </div>
+                {appliedPromotion && (
+                  <div className="checkout-promotion-code">
+                    Mã đã áp dụng:{" "}
+                    <strong>
+                      {
+                        appliedPromotion.code
+                      }
+                    </strong>
+                  </div>
+                )}
 
-              <br />
+                <div className="checkout-summary-total">
+                  <span>
+                    Tổng thanh toán
+                  </span>
 
-              {/* PHONE */}
-              <div>
-                <label>
-                  Số điện thoại
-                </label>
+                  <strong>
+                    {formatPrice(
+                      finalAmount
+                    )}
+                  </strong>
+                </div>
 
-                <br />
-
-                <input
-                  type="text"
-                  value={phone}
-                  onChange={(e) =>
-                    setPhone(
-                      e.target.value
-                    )
-                  }
-                  required
-                />
-              </div>
-
-              <br />
-
-              {/* ADDRESS */}
-              <div>
-                <label>
-                  Địa chỉ giao hàng
-                </label>
-
-                <br />
-
-                <textarea
-                  value={
-                    shippingAddress
-                  }
-                  onChange={(e) =>
-                    setShippingAddress(
-                      e.target.value
-                    )
-                  }
-                  required
-                />
-              </div>
-
-              <br />
-
-              {/* PAYMENT */}
-              <div>
-                <label>
-                  Phương thức thanh toán
-                </label>
-
-                <br />
-
-                <select
-                  value={
-                    paymentMethod
-                  }
-                  onChange={(e) =>
-                    setPaymentMethod(
-                      e.target.value
-                    )
+                <button
+                  type="submit"
+                  form="checkout-form"
+                  className="checkout-submit"
+                  disabled={
+                    submitting
                   }
                 >
-                  <option value="COD">
-                    Thanh toán khi
-                    nhận hàng (COD)
-                  </option>
+                  {submitting
+                    ? "Đang đặt hàng..."
+                    : "Đặt hàng"}
+                </button>
 
-                  <option value="BANK_TRANSFER">
-                    Chuyển khoản
-                    ngân hàng
-                  </option>
-                </select>
-              </div>
-
-              <br />
-
-              <button
-                type="submit"
-                disabled={
-                  submitting
-                }
-              >
-                {submitting
-                  ? "Đang đặt hàng..."
-                  : "Đặt hàng"}
-              </button>
-            </form>
-          </>
-        )}
-    </div>
+                <p className="checkout-note">
+                  Tổng tiền cuối cùng sẽ
+                  được backend kiểm tra lại
+                  trước khi tạo đơn hàng.
+                </p>
+              </aside>
+            </div>
+          )}
+      </div>
+    </main>
   );
 }
 

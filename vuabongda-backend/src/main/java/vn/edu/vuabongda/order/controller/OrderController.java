@@ -62,4 +62,20 @@ public class OrderController {
                 orderId
         );
     }
+
+    // ================================
+    // CUSTOMER HUY DON
+    // CHI DUOC HUY KHI PENDING
+    // ================================
+    @PutMapping("/{orderId}/cancel")
+    public OrderResponseDTO cancelMyOrder(
+            Authentication authentication,
+            @PathVariable Long orderId
+    ) {
+
+        return orderService.cancelMyOrder(
+                authentication.getName(),
+                orderId
+        );
+    }
 }

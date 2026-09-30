@@ -178,6 +178,19 @@ function ProductDetailPage() {
 
       return false;
     }
+    if (
+      String(
+        product?.status ||
+        "ACTIVE"
+      ).toUpperCase() !==
+      "ACTIVE"
+    ) {
+      alert(
+        "Sản phẩm hiện không còn được kinh doanh."
+      );
+
+      return false;
+    }
 
     if (needSize && !selectedSize) {
       alert(
@@ -302,6 +315,12 @@ function ProductDetailPage() {
 
   const stock =
     product.stockQuantity ?? 0;
+  const isActive =
+    String(
+      product.status ||
+      "ACTIVE"
+    ).toUpperCase() ===
+    "ACTIVE";
 
   return (
     <main className="product-detail-page">
@@ -371,6 +390,11 @@ function ProductDetailPage() {
                 product.price
               )}
             </div>
+            {!isActive && (
+              <div className="product-unavailable-note">
+                Sản phẩm hiện không còn được kinh doanh
+              </div>
+            )}
 
             {/* STOCK */}
             <div className="detail-stock">
@@ -489,6 +513,7 @@ function ProductDetailPage() {
                       handleAddToCart
                     }
                     disabled={
+                      !isActive ||
                       stock <= 0 ||
                       processing
                     }
@@ -505,6 +530,7 @@ function ProductDetailPage() {
                       handleBuyNow
                     }
                     disabled={
+                      !isActive ||
                       stock <= 0 ||
                       processing
                     }

@@ -8,6 +8,8 @@ import vn.edu.vuabongda.payment.dto.PaymentResponseDTO;
 import vn.edu.vuabongda.payment.entity.Payment;
 import vn.edu.vuabongda.payment.repository.PaymentRepository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -25,6 +27,13 @@ public class PaymentService {
             String paymentMethod
     ) {
 
+        if (order == null || order.getId() == null) {
+
+            throw new IllegalArgumentException(
+                    "Don hang khong hop le"
+            );
+        }
+
         if (paymentRepository.existsByOrderId(
                 order.getId()
         )) {
@@ -34,24 +43,73 @@ public class PaymentService {
             );
         }
 
-        Payment payment = new Payment();
+        if (
+                paymentMethod == null
+                        ||
+                        paymentMethod.isBlank()
+        ) {
 
-        payment.setOrder(order);
+            throw new IllegalArgumentException(
+                    "Phuong thuc thanh toan khong hop le"
+            );
+        }
 
-        payment.setPaymentMethod(
+        String normalizedMethod =
                 paymentMethod
+                        .trim()
+                        .toUpperCase();
+
+        List<String> validMethods =
+                List.of(
+                        "COD",
+                        "BANK_TRANSFER"
+                );
+
+        if (
+                !validMethods.contains(
+                        normalizedMethod
+                )
+        ) {
+
+            throw new IllegalArgumentException(
+                    "Phuong thuc thanh toan chi chap nhan COD hoac BANK_TRANSFER"
+            );
+        }
+
+        Payment payment =
+                new Payment();
+
+        payment.setOrder(
+                order
         );
 
+        payment.setPaymentMethod(
+                normalizedMethod
+        );
+
+        /*
+         * Quan trong:
+         * So tien Payment lay tu Order da duoc
+         * backend tinh sau khi ap dung promotion.
+         *
+         * Khong lay tong tien tu frontend.
+         */
         payment.setAmount(
                 order.getTotalAmount()
         );
 
-        payment.setStatus("PENDING");
+        payment.setStatus(
+                "PENDING"
+        );
 
         Payment savedPayment =
-                paymentRepository.save(payment);
+                paymentRepository.save(
+                        payment
+                );
 
-        return toDTO(savedPayment);
+        return toDTO(
+                savedPayment
+        );
     }
 
     // ================================
@@ -64,7 +122,8 @@ public class PaymentService {
     ) {
 
         Payment payment =
-                paymentRepository.findByOrderId(
+                paymentRepository
+                        .findByOrderId(
                                 orderId
                         )
                         .orElseThrow(
@@ -73,17 +132,131 @@ public class PaymentService {
                                 )
                         );
 
-        if (!payment.getOrder()
-                .getUser()
-                .getUsername()
-                .equals(username)) {
+        // Customer chi duoc xem
+        // payment cua don hang cua minh
+        if (
+                !payment
+                        .getOrder()
+                        .getUser()
+                        .getUsername()
+                        .equals(username)
+        ) {
 
             throw new NoSuchElementException(
                     "Khong tim thay thong tin thanh toan"
             );
         }
 
-        return toDTO(payment);
+        return toDTO(
+                payment
+        );
+    }
+
+    // ================================
+    // HUY PAYMENT KHI ORDER BI HUY
+    // ================================
+    public void cancelPayment(
+            Long orderId
+    ) {
+
+        Payment payment =
+                paymentRepository
+                        .findByOrderId(
+                                orderId
+                        )
+                        .orElse(null);
+
+        /*
+         * Ho tro ca cac order cu neu DB
+         * chua co payment.
+         */
+        if (payment == null) {
+            return;
+        }
+
+        if (
+                "CANCELLED".equalsIgnoreCase(
+                        payment.getStatus()
+                )
+        ) {
+            return;
+        }
+
+        /*
+         * He thong hien tai chua co nghiep vu
+         * hoan tien.
+         *
+         * Neu sau nay co payment PAID truoc khi huy
+         * thi phai xu ly REFUND rieng.
+         */
+        if (
+                "PAID".equalsIgnoreCase(
+                        payment.getStatus()
+                )
+        ) {
+
+            throw new IllegalArgumentException(
+                    "Don hang da thanh toan, can xu ly hoan tien truoc khi huy"
+            );
+        }
+
+        payment.setStatus(
+                "CANCELLED"
+        );
+
+        paymentRepository.save(
+                payment
+        );
+    }
+
+    // ================================
+    // DANH DAU DA THANH TOAN
+    // ================================
+    public void markPaymentPaid(
+            Long orderId
+    ) {
+
+        Payment payment =
+                paymentRepository
+                        .findByOrderId(
+                                orderId
+                        )
+                        .orElseThrow(
+                                () -> new NoSuchElementException(
+                                        "Khong tim thay thong tin thanh toan"
+                                )
+                        );
+
+        if (
+                "PAID".equalsIgnoreCase(
+                        payment.getStatus()
+                )
+        ) {
+            return;
+        }
+
+        if (
+                "CANCELLED".equalsIgnoreCase(
+                        payment.getStatus()
+                )
+        ) {
+
+            throw new IllegalArgumentException(
+                    "Thanh toan cua don hang da bi huy"
+            );
+        }
+
+        payment.setStatus(
+                "PAID"
+        );
+
+        payment.setPaidAt(
+                LocalDateTime.now()
+        );
+
+        paymentRepository.save(
+                payment
+        );
     }
 
     // ================================

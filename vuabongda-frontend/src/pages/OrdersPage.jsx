@@ -1,9 +1,18 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
 import axiosClient from "../api/axiosClient";
 
 function OrdersPage() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
   const [orders, setOrders] =
     useState([]);
@@ -14,210 +23,482 @@ function OrdersPage() {
   const [error, setError] =
     useState("");
 
+  const [message, setMessage] =
+    useState("");
+
+  const [
+    cancellingOrderId,
+    setCancellingOrderId,
+  ] = useState(null);
+
+  // ================================
+  // FORMAT PRICE
+  // ================================
+  const formatPrice = (
+    value
+  ) =>
+    Number(
+      value || 0
+    ).toLocaleString(
+      "vi-VN"
+    ) + " đ";
+
+  // ================================
+  // FORMAT DATE
+  // ================================
+  const formatDate = (
+    value
+  ) => {
+    if (!value) return "";
+
+    return new Date(
+      value
+    ).toLocaleString(
+      "vi-VN"
+    );
+  };
+
+  // ================================
+  // STATUS LABEL
+  // ================================
+  const getStatusLabel = (
+    status
+  ) => {
+    const labels = {
+      PENDING:
+        "Chờ xác nhận",
+
+      CONFIRMED:
+        "Đã xác nhận",
+
+      SHIPPING:
+        "Đang giao hàng",
+
+      COMPLETED:
+        "Hoàn thành",
+
+      CANCELLED:
+        "Đã hủy",
+    };
+
+    return (
+      labels[status] ||
+      status
+    );
+  };
+
+  // ================================
+  // STATUS CLASS
+  // ================================
+  const getStatusClass = (
+    status
+  ) => {
+    return `order-list-status status-${String(
+      status || ""
+    ).toLowerCase()}`;
+  };
+
   // ================================
   // LOAD ORDERS
   // ================================
-  useEffect(() => {
-    const loadOrders = async () => {
+  const loadOrders =
+    async () => {
       try {
+        setLoading(true);
+        setError("");
+
         const response =
           await axiosClient.get(
             "/api/orders"
           );
 
-        setOrders(response.data);
-        setError("");
-
-        console.log(
-          "GET ORDERS THANH CONG:",
-          response.data
+        setOrders(
+          Array.isArray(
+            response.data
+          )
+            ? response.data
+            : []
         );
       } catch (err) {
         console.error(
-          "GET ORDERS THAT BAI:",
+          "LOAD ORDERS THAT BAI:",
           err
         );
 
+        setOrders([]);
+
         setError(
-          err.response?.data?.message ||
-          "Không thể tải đơn hàng"
+          err.response?.data
+            ?.message ||
+          err.response?.data
+            ?.error ||
+          "Không thể tải danh sách đơn hàng."
         );
       } finally {
         setLoading(false);
       }
     };
 
+  useEffect(() => {
     loadOrders();
   }, []);
 
   // ================================
-  // FORMAT PRICE
+  // CUSTOMER CANCEL ORDER
   // ================================
-  const formatPrice = (price) => {
-    return (
-      Number(price || 0)
-        .toLocaleString("vi-VN") +
-      " đ"
-    );
-  };
+  const handleCancelOrder =
+    async (order) => {
+      if (
+        order.status !==
+        "PENDING"
+      ) {
+        setError(
+          "Chỉ có thể hủy đơn hàng đang chờ xác nhận."
+        );
 
-  // ================================
-  // FORMAT DATE
-  // ================================
-  const formatDate = (date) => {
-    if (!date) {
-      return "Chưa xác định";
-    }
+        return;
+      }
 
-    return new Date(date)
-      .toLocaleString("vi-VN");
-  };
+      const confirmed =
+        window.confirm(
+          `Bạn có chắc muốn hủy đơn hàng #${order.id}?`
+        );
 
-  // ================================
-  // ORDER STATUS
-  // ================================
-  const getOrderStatusLabel = (
-    status
-  ) => {
-    switch (status) {
-      case "PENDING":
-        return "Chờ xác nhận";
+      if (!confirmed) {
+        return;
+      }
 
-      case "CONFIRMED":
-        return "Đã xác nhận";
+      try {
+        setCancellingOrderId(
+          order.id
+        );
 
-      case "SHIPPING":
-        return "Đang giao hàng";
+        setMessage("");
+        setError("");
 
-      case "COMPLETED":
-        return "Đã hoàn thành";
+        const response =
+          await axiosClient.put(
+            `/api/orders/${order.id}/cancel`
+          );
 
-      case "CANCELLED":
-        return "Đã hủy";
+        setOrders(
+          (currentOrders) =>
+            currentOrders.map(
+              (item) =>
+                item.id ===
+                  order.id
+                  ? response.data
+                  : item
+            )
+        );
 
-      default:
-        return status || "Chưa xác định";
-    }
-  };
+        setMessage(
+          `Đã hủy đơn hàng #${order.id} thành công.`
+        );
+      } catch (err) {
+        console.error(
+          "CANCEL ORDER THAT BAI:",
+          err
+        );
+
+        setError(
+          err.response?.data
+            ?.message ||
+          err.response?.data
+            ?.error ||
+          "Không thể hủy đơn hàng."
+        );
+      } finally {
+        setCancellingOrderId(
+          null
+        );
+      }
+    };
 
   if (loading) {
     return (
-      <p>
+      <div className="order-page-message">
         Đang tải đơn hàng...
-      </p>
+      </div>
     );
   }
 
   return (
-    <div>
-      <h1>Đơn hàng của tôi</h1>
+    <main className="orders-page">
+      <div className="orders-container">
 
-      <button
-        type="button"
-        onClick={() =>
-          navigate("/")
-        }
-      >
-        Tiếp tục mua sắm
-      </button>
+        {/* HEADER */}
+        <div className="orders-header">
+          <div>
+            <p className="order-eyebrow">
+              VUABONGDA STORE
+            </p>
 
-      <br />
-      <br />
+            <h1>
+              Đơn hàng của tôi
+            </h1>
 
-      {error && (
-        <p
-          style={{
-            color: "red",
-          }}
-        >
-          {error}
-        </p>
-      )}
+            <p>
+              Theo dõi và xem lại các
+              đơn hàng đã đặt.
+            </p>
+          </div>
 
-      {orders.length === 0 ? (
-        <div>
-          <p>
-            Bạn chưa có đơn hàng nào.
-          </p>
-
-          <button
-            type="button"
-            onClick={() =>
-              navigate("/products")
-            }
+          <Link
+            to="/products"
+            className="orders-shopping-link"
           >
-            Xem sản phẩm
-          </button>
+            Tiếp tục mua sắm
+          </Link>
         </div>
-      ) : (
-        orders.map((order) => (
-          <div
-            key={order.id}
-            style={{
-              border:
-                "1px solid #ccc",
-              padding: "15px",
-              marginBottom: "15px",
-            }}
-          >
+
+        {/* SUCCESS */}
+        {message && (
+          <div className="order-success-message">
+            {message}
+          </div>
+        )}
+
+        {/* ERROR */}
+        {error && (
+          <div className="checkout-error">
+            {error}
+          </div>
+        )}
+
+        {/* EMPTY */}
+        {!error &&
+          orders.length ===
+          0 ? (
+          <section className="orders-empty">
             <h2>
-              Đơn hàng #{order.id}
+              Bạn chưa có đơn hàng
             </h2>
 
             <p>
-              Trạng thái:{" "}
-              <strong>
-                {getOrderStatusLabel(
-                  order.status
-                )}
-              </strong>
-            </p>
-
-            <p>
-              Người nhận:{" "}
-              {order.recipientName}
-            </p>
-
-            <p>
-              Tổng tiền:{" "}
-              <strong>
-                {formatPrice(
-                  order.totalAmount
-                )}
-              </strong>
-            </p>
-
-            <p>
-              Ngày đặt:{" "}
-              {formatDate(
-                order.createdAt
-              )}
-            </p>
-
-            <p>
-              Số sản phẩm:{" "}
-              {order.items?.reduce(
-                (total, item) =>
-                  total +
-                  item.quantity,
-                0
-              ) || 0}
+              Hãy chọn sản phẩm bạn yêu
+              thích và bắt đầu mua sắm.
             </p>
 
             <button
               type="button"
               onClick={() =>
                 navigate(
-                  `/orders/${order.id}`
+                  "/products"
                 )
               }
             >
-              Xem chi tiết
+              Xem sản phẩm
             </button>
-          </div>
-        ))
-      )}
-    </div>
+          </section>
+        ) : (
+          <section className="orders-list">
+            {orders.map(
+              (order) => {
+                const items =
+                  order.items ||
+                  [];
+
+                const totalQuantity =
+                  items.reduce(
+                    (
+                      total,
+                      item
+                    ) =>
+                      total +
+                      Number(
+                        item.quantity ||
+                        0
+                      ),
+                    0
+                  );
+
+                const originalAmount =
+                  Number(
+                    order.originalAmount ??
+                    order.totalAmount ??
+                    0
+                  );
+
+                const discountAmount =
+                  Number(
+                    order.discountAmount ||
+                    0
+                  );
+
+                const canCancel =
+                  order.status ===
+                  "PENDING";
+
+                return (
+                  <article
+                    key={
+                      order.id
+                    }
+                    className="order-list-card"
+                  >
+                    {/* TOP */}
+                    <div className="order-list-top">
+                      <div>
+                        <strong>
+                          Đơn hàng #
+                          {order.id}
+                        </strong>
+
+                        <span>
+                          {formatDate(
+                            order.createdAt
+                          )}
+                        </span>
+                      </div>
+
+                      <span
+                        className={getStatusClass(
+                          order.status
+                        )}
+                      >
+                        {getStatusLabel(
+                          order.status
+                        )}
+                      </span>
+                    </div>
+
+                    {/* BODY */}
+                    <div className="order-list-body">
+
+                      {/* PRODUCTS */}
+                      <div className="order-list-products">
+                        {items
+                          .slice(
+                            0,
+                            2
+                          )
+                          .map(
+                            (
+                              item
+                            ) => (
+                              <div
+                                key={
+                                  item.id
+                                }
+                              >
+                                <strong>
+                                  {
+                                    item.productName
+                                  }
+                                </strong>
+
+                                <span>
+                                  {item.size
+                                    ? `Size ${item.size} · `
+                                    : ""}
+
+                                  SL{" "}
+                                  {
+                                    item.quantity
+                                  }
+                                </span>
+                              </div>
+                            )
+                          )}
+
+                        {items.length >
+                          2 && (
+                            <p>
+                              Và{" "}
+                              {items.length -
+                                2}{" "}
+                              sản phẩm khác
+                            </p>
+                          )}
+                      </div>
+
+                      {/* SUMMARY */}
+                      <div className="order-list-summary">
+                        <span>
+                          {
+                            totalQuantity
+                          }{" "}
+                          sản phẩm
+                        </span>
+
+                        {discountAmount >
+                          0 && (
+                            <>
+                              <small>
+                                Tạm tính{" "}
+                                {formatPrice(
+                                  originalAmount
+                                )}
+                              </small>
+
+                              <small className="order-discount">
+                                Giảm{" "}
+                                {formatPrice(
+                                  discountAmount
+                                )}
+                              </small>
+
+                              {order.promotionCode && (
+                                <small>
+                                  Mã:{" "}
+                                  <strong>
+                                    {
+                                      order.promotionCode
+                                    }
+                                  </strong>
+                                </small>
+                              )}
+                            </>
+                          )}
+
+                        <strong className="order-list-total">
+                          {formatPrice(
+                            order.totalAmount
+                          )}
+                        </strong>
+                      </div>
+                    </div>
+
+                    {/* FOOTER */}
+                    <div className="order-list-footer">
+
+                      {canCancel && (
+                        <button
+                          type="button"
+                          className="order-cancel-button"
+                          disabled={
+                            cancellingOrderId ===
+                            order.id
+                          }
+                          onClick={() =>
+                            handleCancelOrder(
+                              order
+                            )
+                          }
+                        >
+                          {cancellingOrderId ===
+                            order.id
+                            ? "Đang hủy..."
+                            : "Hủy đơn hàng"}
+                        </button>
+                      )}
+
+                      <Link
+                        to={`/orders/${order.id}`}
+                        className="order-detail-link"
+                      >
+                        Xem chi tiết
+                      </Link>
+                    </div>
+                  </article>
+                );
+              }
+            )}
+          </section>
+        )}
+      </div>
+    </main>
   );
 }
 

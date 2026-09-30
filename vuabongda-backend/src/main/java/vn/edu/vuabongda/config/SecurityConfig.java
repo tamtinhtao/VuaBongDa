@@ -1,5 +1,6 @@
 package vn.edu.vuabongda.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import vn.edu.vuabongda.security.JwtAuthFilter;
-import jakarta.servlet.http.HttpServletResponse;
+
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -24,23 +25,45 @@ public class SecurityConfig {
     ) throws Exception {
 
         http
-                .cors(cors -> {})
-                .csrf(csrf -> csrf.disable())
+                // ================================
+                // BASIC CONFIG
+                // ================================
+                .cors(cors -> {
+                })
 
-                .formLogin(form -> form.disable())
+                .csrf(csrf ->
+                        csrf.disable()
+                )
 
-                .httpBasic(basic -> basic.disable())
+                .formLogin(form ->
+                        form.disable()
+                )
 
+                .httpBasic(basic ->
+                        basic.disable()
+                )
+
+                // ================================
+                // STATELESS
+                // ================================
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
+                // ================================
+                // ERROR 401 / 403
+                // ================================
                 .exceptionHandling(ex -> ex
 
                         .authenticationEntryPoint(
-                                (request, response, authException) -> {
+                                (
+                                        request,
+                                        response,
+                                        authException
+                                ) -> {
+
                                     response.setStatus(
                                             HttpServletResponse.SC_UNAUTHORIZED
                                     );
@@ -48,7 +71,12 @@ public class SecurityConfig {
                         )
 
                         .accessDeniedHandler(
-                                (request, response, accessDeniedException) -> {
+                                (
+                                        request,
+                                        response,
+                                        accessDeniedException
+                                ) -> {
+
                                     response.setStatus(
                                             HttpServletResponse.SC_FORBIDDEN
                                     );
@@ -56,22 +84,29 @@ public class SecurityConfig {
                         )
                 )
 
+                // ================================
+                // PHAN QUYEN
+                // ================================
                 .authorizeHttpRequests(auth -> auth
 
                         // =========================
                         // PUBLIC AUTH
                         // =========================
-                        .requestMatchers("/api/auth/**")
+                        .requestMatchers(
+                                "/api/auth/**"
+                        )
                         .permitAll()
 
                         // =========================
-                        // PUBLIC IMAGES
+                        // PUBLIC IMAGE
                         // =========================
-                        .requestMatchers("/uploads/**")
+                        .requestMatchers(
+                                "/uploads/**"
+                        )
                         .permitAll()
 
                         // =========================
-                        // PUBLIC CATEGORY
+                        // PUBLIC CATEGORY - GET
                         // =========================
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -80,13 +115,27 @@ public class SecurityConfig {
                         .permitAll()
 
                         // =========================
-                        // PUBLIC PRODUCT
+                        // PUBLIC PRODUCT - GET
                         // =========================
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/products/**"
                         )
                         .permitAll()
+
+                        // =========================
+                        // ADMIN - TAT CA /api/admin/**
+                        // =========================
+                        // Bao gom:
+                        // /api/admin/orders/**
+                        // /api/admin/users/**
+                        // /api/admin/promotions/**
+                        // va cac API admin sau nay
+                        // =========================
+                        .requestMatchers(
+                                "/api/admin/**"
+                        )
+                        .hasRole("ADMIN")
 
                         // =========================
                         // ADMIN - CATEGORY
@@ -129,19 +178,42 @@ public class SecurityConfig {
                                 "/api/products/**"
                         )
                         .hasRole("ADMIN")
-                        .requestMatchers("/api/admin/orders/**")
-                        .hasRole("ADMIN")
-                        .requestMatchers("/api/cart/**")
+
+                        // =========================
+                        // CUSTOMER - CART
+                        // =========================
+                        .requestMatchers(
+                                "/api/cart/**"
+                        )
                         .hasRole("CUSTOMER")
-                        .requestMatchers("/api/orders/**")
+
+                        // =========================
+                        // CUSTOMER - ORDER
+                        // =========================
+                        .requestMatchers(
+                                "/api/orders/**"
+                        )
                         .hasRole("CUSTOMER")
-                        .requestMatchers("/api/payments/**")
+
+                        // =========================
+                        // CUSTOMER - PAYMENT
+                        // =========================
+                        .requestMatchers(
+                                "/api/payments/**"
+                        )
                         .hasRole("CUSTOMER")
-                        // Các API khác phải đăng nhập
+
+                        // =========================
+                        // CAC API CON LAI
+                        // PHAI DANG NHAP
+                        // =========================
                         .anyRequest()
                         .authenticated()
                 )
 
+                // ================================
+                // JWT FILTER
+                // ================================
                 .addFilterBefore(
                         jwtAuthFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -150,8 +222,12 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // ================================
+    // PASSWORD ENCODER
+    // ================================
     @Bean
     public PasswordEncoder passwordEncoder() {
+
         return new BCryptPasswordEncoder();
     }
 }

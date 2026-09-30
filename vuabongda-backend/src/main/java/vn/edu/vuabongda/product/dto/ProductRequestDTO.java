@@ -4,6 +4,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -11,12 +12,16 @@ import java.math.BigDecimal;
 @Data
 public class ProductRequestDTO {
 
-    @NotBlank(message = "Ten san pham khong duoc de trong")
+    @NotBlank(
+            message = "Ten san pham khong duoc de trong"
+    )
     private String name;
 
     private String description;
 
-    @NotNull(message = "Gia san pham khong duoc de trong")
+    @NotNull(
+            message = "Gia san pham khong duoc de trong"
+    )
     @DecimalMin(
             value = "0.0",
             inclusive = false,
@@ -24,7 +29,9 @@ public class ProductRequestDTO {
     )
     private BigDecimal price;
 
-    @NotNull(message = "So luong ton kho khong duoc de trong")
+    @NotNull(
+            message = "So luong ton kho khong duoc de trong"
+    )
     @Min(
             value = 0,
             message = "So luong ton kho khong duoc am"
@@ -35,6 +42,19 @@ public class ProductRequestDTO {
 
     private String brand;
 
-    @NotNull(message = "Danh muc khong duoc de trong")
+    @NotNull(
+            message = "Danh muc khong duoc de trong"
+    )
     private Long categoryId;
+
+    // ================================
+    // TRANG THAI SAN PHAM
+    // ================================
+    // CREATE co the khong gui -> mac dinh ACTIVE
+    // UPDATE co the gui ACTIVE / INACTIVE
+    @Pattern(
+            regexp = "ACTIVE|INACTIVE|OUT_OF_STOCK",
+            message = "Trang thai chi chap nhan ACTIVE, INACTIVE hoac OUT_OF_STOCK"
+    )
+    private String status;
 }

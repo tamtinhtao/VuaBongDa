@@ -398,6 +398,14 @@ function ProductsPage() {
     useMemo(() => {
       return products.filter(
         (product) => {
+          // CUSTOMER CHI HIEN SAN PHAM ACTIVE
+          if (
+            String(
+              product.status || "ACTIVE"
+            ).toUpperCase() !== "ACTIVE"
+          ) {
+            return false;
+          }
           // CATEGORY
           const matchCategory =
             selectedCategory ===
